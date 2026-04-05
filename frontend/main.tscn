@@ -7,18 +7,24 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h2yge"]
 size = Vector2(45, 45)
 
-[sub_resource type="Gradient" id="Gradient_ig7tw"]
+[sub_resource type="Gradient" id="Gradient_h2yge"]
 offsets = PackedFloat32Array(0)
 colors = PackedColorArray(0.8509804, 0.07058824, 0.09803922, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_0xm2m"]
-gradient = SubResource("Gradient_ig7tw")
+gradient = SubResource("Gradient_h2yge")
 width = 50
 height = 50
 
 [node name="Node2D" type="Node2D" unique_id=1525720828]
 
-[node name="UIOverlay" type="CanvasLayer" parent="." unique_id=629823334]
+[node name="Arena" type="Node2D" parent="." unique_id=1662148492]
+script = ExtResource("1_ig7tw")
+radius = 420.0
+thickness = 10.0
+
+[node name="Director" type="Node2D" parent="." unique_id=1025563058]
+script = ExtResource("3_h2yge")
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=589192664]
 script = ExtResource("1_0xm2m")
@@ -29,12 +35,10 @@ shape = SubResource("RectangleShape2D_h2yge")
 [node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=384209270]
 texture = SubResource("GradientTexture2D_0xm2m")
 
-[node name="Arena" type="Node2D" parent="." unique_id=1662148492]
-script = ExtResource("1_ig7tw")
-radius = 420.0
-thickness = 10.0
+[node name="Telegraphs" type="Node2D" parent="." unique_id=1995094716]
 
-[node name="Director" type="Node2D" parent="." unique_id=1025563058]
-script = ExtResource("3_h2yge")
+[node name="Projectiles" type="Node2D" parent="." unique_id=1951725722]
+
+[node name="UIOverlay" type="CanvasLayer" parent="." unique_id=629823334]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1222265113]

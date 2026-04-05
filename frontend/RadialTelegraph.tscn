@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://1jfrw5vp4ig4"]
+
+[ext_resource type="Script" uid="uid://bd57ycecagmbb" path="res://radial_telegraph.gd" id="1_x8bgm"]
+
+[node name="RadialTelegraph" type="Node2D" unique_id=716366977]
+script = ExtResource("1_x8bgm")

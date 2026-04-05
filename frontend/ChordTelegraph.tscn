@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://y8d7uchbivoh"]
+
+[ext_resource type="Script" uid="uid://c51w4ycf4t6rj" path="res://chord_telegraph.gd" id="1_k8ns7"]
+
+[node name="ChordTelegraph" type="Node2D" unique_id=1161585783]
+script = ExtResource("1_k8ns7")
