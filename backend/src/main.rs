@@ -41,7 +41,7 @@ struct MetaRecord {
     channels: u16,
     win: u32,
     hop: u32,
-    duration: f32,
+    duration: f64,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -63,7 +63,7 @@ fn main() -> anyhow::Result<()> {
                 channels: spec.channels,
                 win: 2048,
                 hop: 512,
-                duration: (reader.len() / spec.channels as u32) as f32 / spec.sample_rate as f32,
+                duration: (reader.len() / spec.channels as u32) as f64 / spec.sample_rate as f64,
             });
 
             serde_json::to_writer(&mut w, &meta)?;
