@@ -1,9 +1,13 @@
+use std::f32::consts::PI;
 use clap::{Args, Parser, Subcommand};
 use serde::{Serialize};
 use std::fs::File;
 use std::io::{BufWriter, Write};
+use std::sync::Arc;
 use hound;
 use itertools::Itertools;
+use rustfft::{Fft, FftPlanner};
+use rustfft::num_complex::Complex;
 
 const WINDOW: usize = 2048;
 const HOP: usize = 512;
@@ -25,7 +29,6 @@ enum Commands {
 struct AnalyzeArgs {
     #[arg(short, long)]
     input: String,
-
     #[arg(short, long)]
     output: String,
 }
@@ -38,8 +41,18 @@ enum Record {
     Meta(MetaRecord),
     #[serde(rename = "energy")]
     Energy(EnergyRecord),
+    #[serde(rename = "band")]
+    Band(BandEnergies),
     #[serde(rename= "done")]
     Done,
+}
+
+#[derive(Serialize)]
+struct BandEnergies {
+    t: f64,
+    low: f32,
+    mid: f32,
+    high: f32,
 }
 
 #[derive(Serialize)]
@@ -81,10 +94,29 @@ fn main() -> anyhow::Result<()> {
                 })
                 .collect();
 
-            let mut energy: Vec<Record> = Vec::new();
+            let hann: Vec<f32> = (0..WINDOW)
+                .map(|i| {
+                    0.5 - 0.5 * f32::cos(2.0 * PI * i as f32 / WINDOW as f32)
+                })
+                .collect();
+
+            let fft: Arc<dyn Fft<f32>> = FftPlanner::new().plan_fft_forward(WINDOW);
+
+            let bin_hz = spec.sample_rate as f32 / WINDOW as f32;
+            let bands = [
+                (20.0, 160.0),
+                (160.0, 2000.0),
+                (2000.0, 8000.0),
+            ];
+
+            let bins = bands.map(|(f_low, f_high)| ((f_low/bin_hz).round() as usize, (f_high/bin_hz).round() as usize));
+
+            let mut records: Vec<Record> = Vec::new();
 
             let mut rms_max: f32 = 1e-6;
             let mut e_smooth: f32 = 0f32;
+
+            let mut fft_in: Vec<Complex<f32>> = vec![Complex::new(0.0, 0.0); WINDOW];
 
             let mut i = 0;
             while (HOP * i) + WINDOW < samples.len() {
@@ -99,8 +131,33 @@ fn main() -> anyhow::Result<()> {
 
                 // downsampling to prevent flooding buffer
                 if i % 2 == 0 {
-                    energy.push(Record::Energy(EnergyRecord { t, e: e_smooth }));
+                    records.push(Record::Energy(EnergyRecord { t, e: e_smooth }));
                 }
+
+                fft_in.clear();
+                fft_in.extend(
+                    samples[start..start+WINDOW]
+                        .iter()
+                        .zip(hann.iter())
+                        .map(|(&s, &h)| Complex::new(s*h, 0f32))
+                );
+
+                fft.process(&mut fft_in);
+
+                let power_spectrum: Vec<f32> = fft_in[0..=WINDOW/2].iter().map(|c| c.norm_sqr()).collect();
+
+                let energies: [f32; 3] = bins.map(|(lo, hi)| power_spectrum[lo..=hi].iter().sum::<f32>());
+
+                records.push(
+                    Record::Band(
+                        BandEnergies {
+                            t,
+                            low: energies[0],
+                            mid: energies[1],
+                            high: energies[2]
+                        }
+                    )
+                );
 
                 i += 1;
             }
@@ -119,7 +176,7 @@ fn main() -> anyhow::Result<()> {
             serde_json::to_writer(&mut w, &meta)?;
             w.write_all(b"\n")?;
 
-            serde_json::to_writer(&mut w, &energy)?;
+            serde_json::to_writer(&mut w, &records)?;
             w.write_all(b"\n")?;
 
             serde_json::to_writer(&mut w, &Record::Done)?;
