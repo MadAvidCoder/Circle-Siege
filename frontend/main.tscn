@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bi3v477dgld7r"]
 
 [ext_resource type="Script" uid="uid://ct3pruaskr5c8" path="res://player.gd" id="1_0xm2m"]
+[ext_resource type="Script" uid="uid://7p7q3bn7v4xc" path="res://main.gd" id="1_1bvp3"]
 [ext_resource type="Script" uid="uid://xgqcskvhu27c" path="res://arena.gd" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://d3fp47cajp10d" path="res://director.gd" id="3_h2yge"]
 
@@ -17,6 +18,7 @@ width = 50
 height = 50
 
 [node name="Node2D" type="Node2D" unique_id=1525720828]
+script = ExtResource("1_1bvp3")
 
 [node name="Arena" type="Node2D" parent="." unique_id=1662148492]
 script = ExtResource("1_ig7tw")
@@ -42,3 +44,30 @@ texture = SubResource("GradientTexture2D_0xm2m")
 [node name="UIOverlay" type="CanvasLayer" parent="." unique_id=629823334]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1222265113]
+
+[node name="FileDialog" type="FileDialog" parent="." unique_id=416975433]
+oversampling_override = 1.0
+title = "Open a File"
+position = Vector2i(0, 36)
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.wav;Waveform Audio Files;audio/wav")
+use_native_dialog = true
+
+[node name="PopupPanel" type="PopupPanel" parent="." unique_id=1898693248]
+oversampling_override = 1.0
+title = "Processing..."
+initial_position = 2
+visible = true
+always_on_top = true
+
+[node name="Label" type="Label" parent="PopupPanel" unique_id=1150648896]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 96.0
+offset_bottom = 96.0
+text = "Processing "
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1488394178]
+
+[connection signal="file_selected" from="FileDialog" to="." method="_file_selected"]
