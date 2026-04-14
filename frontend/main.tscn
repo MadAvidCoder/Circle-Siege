@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://xgqcskvhu27c" path="res://arena.gd" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://bsvr1pwowkyt3" path="res://spectrum.gd" id="2_lquwl"]
 [ext_resource type="Script" uid="uid://d3fp47cajp10d" path="res://director.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://bsochxaqjp1xu" path="res://camera_2d.gd" id="6_7mycd"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h2yge"]
 size = Vector2(45, 45)
@@ -25,6 +26,8 @@ script = ExtResource("1_1bvp3")
 position = Vector2(-960, 450)
 script = ExtResource("2_lquwl")
 
+[node name="Shockwave" type="Node2D" parent="." unique_id=1147668562]
+
 [node name="Arena" type="Node2D" parent="." unique_id=1662148492]
 script = ExtResource("1_ig7tw")
 thickness = 10.0
@@ -35,15 +38,6 @@ one_shot = true
 
 [node name="Director" type="Node2D" parent="." unique_id=1025563058]
 script = ExtResource("3_h2yge")
-gap_width_deg = null
-gap_margin_deg = null
-min_gap_window = null
-debug_draw_gap = null
-debug_gap_alpha = null
-radial_speed = null
-chord_speed = null
-telegraph_time = null
-travel_time = null
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=589192664]
 script = ExtResource("1_0xm2m")
@@ -61,6 +55,7 @@ texture = SubResource("GradientTexture2D_0xm2m")
 [node name="UIOverlay" type="CanvasLayer" parent="." unique_id=629823334]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1222265113]
+script = ExtResource("6_7mycd")
 
 [node name="FileDialog" type="FileDialog" parent="." unique_id=416975433]
 oversampling_override = 1.0
