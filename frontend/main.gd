@@ -4,6 +4,7 @@ var meta
 var energies = []
 var events = []
 var spectrum = []
+var beats = []
 
 var energy = 0.0
 
@@ -27,7 +28,7 @@ func _file_selected(path: String) -> void:
 		"--input", wav_path,
 		"--output", analysis_path
 	])
-		
+	
 	var records = []
 	var file = FileAccess.open(analysis_path, FileAccess.READ)
 	while not file.eof_reached():
@@ -45,10 +46,12 @@ func _file_selected(path: String) -> void:
 			"energy": energies.append(r)
 			"event": events.append(r)
 			"spectrum": spectrum.append(r)
+			"beat": beats.append(r["t"])
 
 	events.sort_custom(func(a, b): return a["t"] < b["t"])
 	energies.sort_custom(func(a, b): return a["t"] < b["t"])
 	spectrum.sort_custom(func(a, b): return a["t"] < b["t"])
+	beats.sort()
 
 	var audio = AudioStreamWAV.new()
 	var wav_file = FileAccess.open(wav_path, FileAccess.READ)

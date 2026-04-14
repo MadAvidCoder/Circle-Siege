@@ -29,6 +29,10 @@ script = ExtResource("2_lquwl")
 script = ExtResource("1_ig7tw")
 thickness = 10.0
 
+[node name="Timer" type="Timer" parent="Arena" unique_id=302637933]
+wait_time = 0.1
+one_shot = true
+
 [node name="Director" type="Node2D" parent="." unique_id=1025563058]
 script = ExtResource("3_h2yge")
 
@@ -72,6 +76,7 @@ offset_right = 96.0
 offset_bottom = 96.0
 text = "Processing "
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="PopupPanel" unique_id=1488394178]
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1488394178]
 
+[connection signal="timeout" from="Arena/Timer" to="Arena" method="_on_timer_timeout"]
 [connection signal="file_selected" from="FileDialog" to="." method="_file_selected"]

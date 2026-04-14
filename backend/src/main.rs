@@ -9,6 +9,7 @@ use itertools::Itertools;
 use rustfft::{Fft, FftPlanner};
 use rustfft::num_complex::Complex;
 use std::convert::TryFrom;
+use aubio;
 
 const WINDOW: usize = 2048;
 const HOP: usize = 512;
@@ -46,6 +47,8 @@ enum Record {
     Band(BandEnergies),
     #[serde(rename = "spectrum")]
     Spectrum(SpectrumRecord),
+    #[serde(rename  = "beat")]
+    Beat(BeatRecord),
     #[serde(rename = "event")]
     Event(EventRecord),
     #[serde(rename= "done")]
@@ -107,6 +110,11 @@ struct EnergyRecord {
     e: f32
 }
 
+#[derive(Serialize)]
+struct BeatRecord {
+    t: f64,
+}
+
 struct BandDetect {
     prev_smooth: f32,
     smooth: f32,
@@ -150,6 +158,9 @@ fn main() -> anyhow::Result<()> {
                     (sum / count) / 37268.0
                 })
                 .collect();
+
+            let mut tempo = aubio::Tempo::new(aubio::OnsetMode::SpecDiff, WINDOW, HOP, spec.sample_rate)?;
+            let mut last_beat_time = -1.0;
 
             let hann: Vec<f32> = (0..WINDOW)
                 .map(|i| {
@@ -209,6 +220,15 @@ fn main() -> anyhow::Result<()> {
                     Record::Spectrum(
                         SpectrumRecord { t, bins: power_spectrum.clone() })
                 );
+
+                let aubio_input = samples[start..start+WINDOW].to_vec();
+                tempo.do_(&aubio_input, &mut [0.0f32; 1]).unwrap();
+                let beat_t = tempo.get_last_s();
+
+                if beat_t > last_beat_time + 1e-4 {
+                    records.push(Record::Beat(BeatRecord { t: beat_t as f64 }));
+                    last_beat_time = beat_t;
+                }
 
                 let energies: [f32; 3] = bins.map(|(lo, hi)| power_spectrum[lo..=hi].iter().sum::<f32>());
 
