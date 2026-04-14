@@ -111,8 +111,8 @@ struct BandDetect {
 const BAND_EMA: f32 = 0.25;
 const ONSET_MEAN_EMA: f32 = 0.08;
 const ONSET_DEV_EMA: f32 = 0.08;
-const THRESH_K: f32 = 7.0;
-const REFRACTORY_FRAMES: [usize; 3] = [12, 8, 6];
+const THRESH_K: f32 = 5.0;
+const REFRACTORY_FRAMES: [usize; 3] = [10, 6, 3];
 
 impl BandDetect {
     fn new() -> Self {
