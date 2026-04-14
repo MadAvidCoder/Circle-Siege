@@ -72,6 +72,6 @@ offset_right = 96.0
 offset_bottom = 96.0
 text = "Processing "
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1488394178]
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="PopupPanel" unique_id=1488394178]
 
 [connection signal="file_selected" from="FileDialog" to="." method="_file_selected"]
