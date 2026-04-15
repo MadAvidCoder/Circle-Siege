@@ -13,6 +13,7 @@ var radius = nominal_radius
 var bump = 1.0
 
 func _draw() -> void:
+	draw_circle(Vector2.ZERO, radius, Color(0,0,0,0.2))
 	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 128, Color(0.9, 0.9, 1.0, 0.9), thickness, true)
 
 func _process(delta: float) -> void:

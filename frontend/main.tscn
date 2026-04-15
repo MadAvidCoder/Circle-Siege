@@ -5,22 +5,33 @@
 [ext_resource type="Script" uid="uid://xgqcskvhu27c" path="res://arena.gd" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://cp3v8ek5q5rxx" path="res://background.gd" id="2_kek77"]
 [ext_resource type="Script" uid="uid://bsvr1pwowkyt3" path="res://spectrum.gd" id="2_lquwl"]
+[ext_resource type="Shader" uid="uid://ko830oq10orc" path="res://flow_gradient.gdshader" id="3_4c57u"]
 [ext_resource type="Script" uid="uid://bcjx3y7dh7e2g" path="res://shockwave.gd" id="3_272bh"]
 [ext_resource type="Script" uid="uid://d3fp47cajp10d" path="res://director.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://b3kl7cctlbvi7" path="res://beat_particles.gd" id="4_5vw27"]
+[ext_resource type="Script" uid="uid://bnei6yg2f0p60" path="res://gradient_bg.gd" id="4_efxa6"]
 [ext_resource type="Script" uid="uid://bsochxaqjp1xu" path="res://camera_2d.gd" id="6_7mycd"]
 
-[sub_resource type="Gradient" id="Gradient_kek77"]
-interpolation_color_space = 2
-offsets = PackedFloat32Array(0, 0.5, 1)
-colors = PackedColorArray(0, 0, 0, 1, 0.40392157, 0.40392157, 0.73333335, 1, 1, 1, 1, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_4c57u"]
-gradient = SubResource("Gradient_kek77")
-width = 2250
-height = 2250
-fill = 1
-fill_to = Vector2(1, 1)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_efxa6"]
+shader = ExtResource("3_4c57u")
+shader_parameter/p0 = Vector2(0.25, 0.3)
+shader_parameter/p1 = Vector2(0.75, 0.28)
+shader_parameter/p2 = Vector2(0.35, 0.78)
+shader_parameter/p3 = Vector2(0.78, 0.75)
+shader_parameter/dark_col = Color(0.05, 0.06, 0.08, 1)
+shader_parameter/light_col = Color(0.78, 0.82, 0.9, 1)
+shader_parameter/mix_strength = 0.35
+shader_parameter/mid = 0.5
+shader_parameter/range = 0.55
+shader_parameter/softness = 1.35
+shader_parameter/flow = 0.2
+shader_parameter/time_scale = 0.08
+shader_parameter/energy = 0.0
+shader_parameter/beat = 0.0
+shader_parameter/contrast = 1.1
+shader_parameter/grain = 0.015
+shader_parameter/vignette = 0.18
+shader_parameter/brightness = 1.0
 
 [sub_resource type="Gradient" id="Gradient_5vw27"]
 colors = PackedColorArray(0.865, 0.58, 0, 1, 0.865, 0.58, 0, 1)
@@ -70,13 +81,14 @@ script = ExtResource("1_1bvp3")
 [node name="Background" type="Node2D" parent="." unique_id=1056660292]
 script = ExtResource("2_kek77")
 
-[node name="Glow" type="Sprite2D" parent="Background" unique_id=1051419699]
-modulate = Color(1, 1, 1, 0.42000002)
-texture = SubResource("GradientTexture2D_4c57u")
-
-[node name="Vignette" type="ColorRect" parent="Background" unique_id=1088083627]
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="GradientBg" type="ColorRect" parent="Background" unique_id=1088083627]
+material = SubResource("ShaderMaterial_efxa6")
+offset_left = -1056.0
+offset_top = -594.0
+offset_right = 1056.0
+offset_bottom = 594.0
+mouse_filter = 2
+script = ExtResource("4_efxa6")
 
 [node name="Spectrum" type="Node2D" parent="." unique_id=72163630]
 position = Vector2(-960, 450)
@@ -109,6 +121,7 @@ one_shot = true
 
 [node name="Director" type="Node2D" parent="." unique_id=1025563058]
 script = ExtResource("3_h2yge")
+debug_draw_gap = false
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=589192664]
 script = ExtResource("1_0xm2m")
