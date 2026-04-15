@@ -3,11 +3,24 @@
 [ext_resource type="Script" uid="uid://ct3pruaskr5c8" path="res://player.gd" id="1_0xm2m"]
 [ext_resource type="Script" uid="uid://7p7q3bn7v4xc" path="res://main.gd" id="1_1bvp3"]
 [ext_resource type="Script" uid="uid://xgqcskvhu27c" path="res://arena.gd" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://cp3v8ek5q5rxx" path="res://background.gd" id="2_kek77"]
 [ext_resource type="Script" uid="uid://bsvr1pwowkyt3" path="res://spectrum.gd" id="2_lquwl"]
 [ext_resource type="Script" uid="uid://bcjx3y7dh7e2g" path="res://shockwave.gd" id="3_272bh"]
 [ext_resource type="Script" uid="uid://d3fp47cajp10d" path="res://director.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://b3kl7cctlbvi7" path="res://beat_particles.gd" id="4_5vw27"]
 [ext_resource type="Script" uid="uid://bsochxaqjp1xu" path="res://camera_2d.gd" id="6_7mycd"]
+
+[sub_resource type="Gradient" id="Gradient_kek77"]
+interpolation_color_space = 2
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0.40392157, 0.40392157, 0.73333335, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_4c57u"]
+gradient = SubResource("Gradient_kek77")
+width = 2250
+height = 2250
+fill = 1
+fill_to = Vector2(1, 1)
 
 [sub_resource type="Gradient" id="Gradient_5vw27"]
 colors = PackedColorArray(0.865, 0.58, 0, 1, 0.865, 0.58, 0, 1)
@@ -53,6 +66,17 @@ height = 50
 
 [node name="Node2D" type="Node2D" unique_id=1525720828]
 script = ExtResource("1_1bvp3")
+
+[node name="Background" type="Node2D" parent="." unique_id=1056660292]
+script = ExtResource("2_kek77")
+
+[node name="Glow" type="Sprite2D" parent="Background" unique_id=1051419699]
+modulate = Color(1, 1, 1, 0.42000002)
+texture = SubResource("GradientTexture2D_4c57u")
+
+[node name="Vignette" type="ColorRect" parent="Background" unique_id=1088083627]
+offset_right = 40.0
+offset_bottom = 40.0
 
 [node name="Spectrum" type="Node2D" parent="." unique_id=72163630]
 position = Vector2(-960, 450)

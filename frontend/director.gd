@@ -27,6 +27,7 @@ var chord_telegraph_scene = preload("res://ChordTelegraph.tscn")
 @onready var camera = $"../Camera2D"
 @onready var shock = $"../Shockwave/Line2D"
 @onready var particles = $"../BeatParticles"
+@onready var background = $"../Background"
 
 var gap_centre = 0.0
 var gap_until_t = 0.0
@@ -53,6 +54,7 @@ func _process(_delta: float) -> void:
 	while next_beat_index < main.beats.size() and main.beats[next_beat_index] <= song_time:
 		next_beat_index += 1
 		arena.pulse()
+		background.on_beat()
 		if next_beat_index % 4 == 0:
 			camera.trigger_beat()
 			shock.fire(arena.radius, arena.radius + 300, Color(0.865, 0.58, 0.0, 1.0))
