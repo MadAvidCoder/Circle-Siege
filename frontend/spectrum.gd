@@ -43,7 +43,9 @@ func _draw() -> void:
 		var y = y_offset - clamp((db + 5.0) / 10.0, 0, 1) * spectrum_height
 		pts.append(Vector2(x, y))
 	pts.append(Vector2(width * float(n_bins) / float(n_bins-1) + x_offset, y_offset))
-	draw_polyline(pts, Color(0.5,0.7,1,0.75), 2.5, true)
+	draw_polyline(pts, Color(0.502, 0.698, 1.0, 0.312), 21, true)
+	draw_polyline(pts, Color(0.502, 0.698, 1.0, 0.572), 8, true)
+	draw_polyline(pts, Color(0.314, 0.663, 0.941, 1.0), 1, true)
 
 func _process(delta: float) -> void:
 	queue_redraw()
