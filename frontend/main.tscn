@@ -247,4 +247,4 @@ text = "Processing "
 
 [connection signal="timeout" from="Arena/Timer" to="Arena" method="_on_timer_timeout"]
 [connection signal="area_entered" from="Player/NearMissArea" to="Player" method="_on_near_miss_area_entered"]
-[connection signal="file_selected" from="FileDialog" to="." method="_file_selected"]
+[connection signal="file_selected" from="FileDialog" to="Menu" method="_on_file_selected"]

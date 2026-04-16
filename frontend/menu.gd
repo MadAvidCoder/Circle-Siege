@@ -86,6 +86,9 @@ var sector_size = TAU / segments
 var angle_offset = -PI / 2.0 - (sector_size / 2.0)
 
 @onready var player = $"../Player"
+@onready var file_sel = $"../FileDialog"
+
+var audio_path = ""
 
 func _unhandled_input(event: InputEvent) -> void:
 	if (event is InputEventMouseButton and event.pressed) or event.is_action_pressed("ui_accept"):
@@ -110,6 +113,21 @@ func _unhandled_input(event: InputEvent) -> void:
 				queue_redraw()
 			elif render_options[selected_segment]["label"] == "Quit":
 				get_tree().quit()
+			elif render_options[selected_segment]["label"] == "File":
+				stack.pop_back()
+				stack.append(render_options)
+				file_sel.show()
+			
+
+func _on_file_selected(path: String) -> void:
+	audio_path = path
+	render_options = [
+		{"label": "Chill", "tooltip": "Low Density, Long Telegraphs, Infinite Lives."},
+		{"label": "Normal", "tooltip": "Standard obstacle settings (recommended)"},
+		{"label": "Hard", "tooltip": "For players seeking a challenge."},
+		{"label": "Back", "tooltip": "Return to input selection."},
+	]
+	stack.append(render_options)
 
 func _process(_delta: float) -> void:
 	queue_redraw()
