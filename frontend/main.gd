@@ -85,3 +85,8 @@ func get_spectrum(time: float) -> Array:
 				out.append(lerp(a[j], b[j], f))
 			return out
 	return spectrum[spectrum.size()-1]["bins"] if spectrum.size() > 0 else []
+
+
+func _on_audio_stream_player_finished() -> void:
+	await get_tree().create_timer(3).timeout
+	get_tree().reload_current_scene()

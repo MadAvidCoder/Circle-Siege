@@ -233,7 +233,6 @@ use_native_dialog = true
 oversampling_override = 1.0
 title = "Processing..."
 initial_position = 2
-visible = true
 always_on_top = true
 
 [node name="Label" type="Label" parent="PopupPanel" unique_id=1150648896]
@@ -248,3 +247,4 @@ text = "Processing "
 [connection signal="timeout" from="Arena/Timer" to="Arena" method="_on_timer_timeout"]
 [connection signal="area_entered" from="Player/NearMissArea" to="Player" method="_on_near_miss_area_entered"]
 [connection signal="file_selected" from="FileDialog" to="Menu" method="_on_file_selected"]
+[connection signal="finished" from="AudioStreamPlayer" to="." method="_on_audio_stream_player_finished"]
