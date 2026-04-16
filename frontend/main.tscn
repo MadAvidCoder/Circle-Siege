@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://b3kl7cctlbvi7" path="res://beat_particles.gd" id="4_5vw27"]
 [ext_resource type="Script" uid="uid://bnei6yg2f0p60" path="res://gradient_bg.gd" id="4_efxa6"]
 [ext_resource type="Script" uid="uid://bsochxaqjp1xu" path="res://camera_2d.gd" id="6_7mycd"]
+[ext_resource type="Script" uid="uid://ddyw6hltilyq3" path="res://near_miss_fx.gd" id="11_dg77c"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_efxa6"]
 shader = ExtResource("3_4c57u")
@@ -79,6 +80,9 @@ gradient = SubResource("Gradient_h2yge")
 width = 50
 height = 50
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_efxa6"]
+size = Vector2(77, 77)
+
 [node name="Node2D" type="Node2D" unique_id=1525720828]
 script = ExtResource("1_1bvp3")
 
@@ -128,7 +132,11 @@ script = ExtResource("3_h2yge")
 debug_draw_gap = false
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=589192664]
+collision_mask = 2
 script = ExtResource("1_0xm2m")
+
+[node name="NearMissFX" type="Node2D" parent="Player" unique_id=1008798400]
+script = ExtResource("11_dg77c")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=156262809]
 shape = SubResource("RectangleShape2D_h2yge")
@@ -136,9 +144,17 @@ shape = SubResource("RectangleShape2D_h2yge")
 [node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=384209270]
 texture = SubResource("GradientTexture2D_0xm2m")
 
-[node name="Telegraphs" type="Node2D" parent="." unique_id=1995094716]
+[node name="NearMissArea" type="Area2D" parent="Player" unique_id=1779539484]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/NearMissArea" unique_id=1913067072]
+shape = SubResource("RectangleShape2D_efxa6")
 
 [node name="Projectiles" type="Node2D" parent="." unique_id=1951725722]
+
+[node name="Telegraphs" type="Node2D" parent="." unique_id=1995094716]
 
 [node name="UIOverlay" type="CanvasLayer" parent="." unique_id=629823334]
 
@@ -171,4 +187,5 @@ text = "Processing "
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1488394178]
 
 [connection signal="timeout" from="Arena/Timer" to="Arena" method="_on_timer_timeout"]
+[connection signal="area_entered" from="Player/NearMissArea" to="Player" method="_on_near_miss_area_entered"]
 [connection signal="file_selected" from="FileDialog" to="." method="_file_selected"]

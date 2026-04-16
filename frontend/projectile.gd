@@ -18,7 +18,12 @@ var chord_b: Vector2
 var chord_t = 0.0
 var chord_len = 1.0
 
+var near_missed = false
+
 @onready var main = get_tree().current_scene
+
+func _ready():
+	add_to_group("projectiles")
 
 func setup_radial(start_pos: Vector2, direction: Vector2, spd: float, colour: Color = Color("d9a0d4")) -> void:
 	global_position = start_pos

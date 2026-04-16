@@ -11,6 +11,7 @@ extends CharacterBody2D
 
 @onready var arena_radius = $"../Arena".radius
 @onready var player_size = $Sprite2D.get_rect().size.x
+@onready var near_miss_fx = $NearMissFX
 
 var lives = 3
 
@@ -37,3 +38,12 @@ func _physics_process(delta: float) -> void:
 
 	velocity += accel * delta
 	move_and_slide()
+
+func _on_near_miss_area_entered(area: Area2D) -> void:
+	if !area.is_in_group("projectiles"):
+		return
+	if area.near_missed:
+		return
+	
+	area.near_missed = true
+	near_miss_fx.trigger()
