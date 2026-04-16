@@ -11,12 +11,10 @@ var energy = 0.0
 @onready var file_sel = $FileDialog
 @onready var popup = $PopupPanel
 @onready var popup_label = $PopupPanel/Label
+@onready var menu = $Menu
+@onready var arena = $Arena
 
-func _ready() -> void:
-	#file_sel.show()
-	pass
-
-func _file_selected(path: String) -> void:
+func start(path: String) -> void:
 	var wav_path = path
 	var analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
 	var analysis_path = ProjectSettings.globalize_path("user://analysis.jsonl")
@@ -24,7 +22,7 @@ func _file_selected(path: String) -> void:
 	popup_label.text = "Processing `" + wav_path.get_file() + "`. \nPlease Wait..."
 	popup.popup()
 
-	var res = OS.execute(analyser_path, [
+	OS.execute(analyser_path, [
 		"analyze-wav",
 		"--input", wav_path,
 		"--output", analysis_path
@@ -54,12 +52,13 @@ func _file_selected(path: String) -> void:
 	spectrum.sort_custom(func(a, b): return a["t"] < b["t"])
 	beats.sort()
 
-	var audio = AudioStreamWAV.new()
 	var wav_file = FileAccess.open(wav_path, FileAccess.READ)
 	$AudioStreamPlayer.stream = AudioStreamWAV.load_from_buffer(wav_file.get_buffer(wav_file.get_length()))
 	wav_file.close()
 	$AudioStreamPlayer.play()
 	popup.hide()
+	arena.show()
+	menu.hide()
 
 func _process(_delta: float) -> void:
 	energy = get_energy($AudioStreamPlayer.get_playback_position())

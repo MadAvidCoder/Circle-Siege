@@ -1,6 +1,6 @@
 extends Node2D
 
-@export var radius = 400
+@export var radius: int = 400
 @export var thickness = 6
 
 @export var option_font: Font
@@ -20,8 +20,26 @@ var options = [
 		"tooltip": "Start the game and choose your mode!",
 		"children": [
 			{"label": "File", "tooltip": "Supply your own WAV file."},
-			{"label": "Demo", "tooltip": "Play the built-in track."},
-			{"label": "System Audio", "tooltip": "Dynamically generate the level based on system audio."},
+			{
+				"label": "Demo",
+				"tooltip": "Play the built-in track.",
+				"children": [
+					{"label": "Chill", "tooltip": "Low Density, Long Telegraphs, Infinite Lives."},
+					{"label": "Normal", "tooltip": "Standard obstacle settings (recommended)"},
+					{"label": "Hard", "tooltip": "For players seeking a challenge."},
+					{"label": "Back", "tooltip": "Return to input selection."},
+				],
+			},
+			{
+				"label": "System Audio",
+				"tooltip": "Dynamically generate the level based on system audio.",
+				"children": [
+					{"label": "Chill", "tooltip": "Low Density, Long Telegraphs, Infinite Lives."},
+					{"label": "Normal", "tooltip": "Standard obstacle settings (recommended)"},
+					{"label": "Hard", "tooltip": "For players seeking a challenge."},
+					{"label": "Back", "tooltip": "Return to input selection."},
+				],
+			},
 			{"label": "Back", "tooltip": "Return to main menu."},
 		],
 	},
@@ -87,14 +105,20 @@ var angle_offset = -PI / 2.0 - (sector_size / 2.0)
 
 @onready var player = $"../Player"
 @onready var file_sel = $"../FileDialog"
+@onready var main = $".."
 
 var audio_path = ""
 
 func _unhandled_input(event: InputEvent) -> void:
+	if !visible:
+		return
+	
 	if (event is InputEventMouseButton and event.pressed) or event.is_action_pressed("ui_accept"):
 		if selected_segment == -1:
 			return
 		if render_options[selected_segment].has("children"):
+			if render_options[selected_segment]["label"] == "Demo":
+				audio_path = ProjectSettings.globalize_path("res://demo.wav")
 			render_options = render_options[selected_segment]["children"]
 			segments = render_options.size()
 			sector_size = TAU / segments
@@ -103,21 +127,23 @@ func _unhandled_input(event: InputEvent) -> void:
 			stack.append(render_options)
 			queue_redraw()
 		else:
-			if render_options[selected_segment]["label"] == "Back":
-				stack.pop_back()
-				render_options = stack[-1]
-				segments = render_options.size()
-				sector_size = TAU / segments
-				angle_offset = -PI / 2.0 - (sector_size / 2.0)
-				selected_segment = -1
-				queue_redraw()
-			elif render_options[selected_segment]["label"] == "Quit":
-				get_tree().quit()
-			elif render_options[selected_segment]["label"] == "File":
-				stack.pop_back()
-				stack.append(render_options)
-				file_sel.show()
-			
+			match render_options[selected_segment]["label"]:
+				"Back":
+					stack.pop_back()
+					render_options = stack[-1]
+					segments = render_options.size()
+					sector_size = TAU / segments
+					angle_offset = -PI / 2.0 - (sector_size / 2.0)
+					selected_segment = -1
+					queue_redraw()
+				"Quit":
+					get_tree().quit()
+				"File":
+					stack.pop_back()
+					stack.append(render_options)
+					file_sel.show()
+				"Normal":
+					main.start(audio_path)
 
 func _on_file_selected(path: String) -> void:
 	audio_path = path
