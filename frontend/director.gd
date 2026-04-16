@@ -54,14 +54,19 @@ func _process(_delta: float) -> void:
 	while next_beat_index < main.beats.size() and main.beats[next_beat_index] <= song_time:
 		next_beat_index += 1
 		arena.pulse()
-		background.on_beat()
+		if !Config.reduced_motion:
+			background.on_beat()
 		if next_beat_index % 4 == 0:
-			camera.trigger_beat()
-			shock.fire(arena.radius, arena.radius + 300, Color(0.865, 0.58, 0.0, 1.0))
-			particles.global_position = arena.global_position
-			particles.process_material.emission_ring_inner_radius = arena.radius + 33
-			particles.process_material.emission_ring_radius = arena.radius + 34
-			particles.restart()
+			if !Config.reduced_motion:
+				if Config.camera_fx:
+					camera.trigger_beat()
+				if Config.shockwave:
+					shock.fire(arena.radius, arena.radius + 300, Color(0.865, 0.58, 0.0, 1.0))
+				if Config.particles:
+					particles.global_position = arena.global_position
+					particles.process_material.emission_ring_inner_radius = arena.radius + 33
+					particles.process_material.emission_ring_radius = arena.radius + 34
+					particles.restart()
 		elif next_beat_index % 4 == 2:
 			spawn_radial(randf() * TAU, Color(0.996, 0.482, 0.192, 1.0), radial_speed*0.7)
 	

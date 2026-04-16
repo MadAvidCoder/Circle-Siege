@@ -64,7 +64,7 @@ var options = [
 				"children": [
 					{"label": "Particles", "tooltip": "Toggle particle VFX" },
 					{"label": "Camera FX", "tooltip": "Toggle camera pulse and movement" },
-					{"label": "Beat Flash", "tooltip": "Toggle background beat flash" },
+					{"label": "Shockwave", "tooltip": "Toggle background shockwave on the beat" },
 					{"label": "Spectrum Line", "tooltip": "Toggle background spectrum line" },
 					{"label": "Back", "tooltip": "Return to settings." },
 				],
@@ -136,14 +136,17 @@ func _unhandled_input(event: InputEvent) -> void:
 					angle_offset = -PI / 2.0 - (sector_size / 2.0)
 					selected_segment = -1
 					queue_redraw()
-				"Quit":
-					get_tree().quit()
+				"Quit": get_tree().quit()
 				"File":
 					stack.pop_back()
 					stack.append(render_options)
 					file_sel.show()
-				"Normal":
-					main.start(audio_path)
+				"Normal": main.start(audio_path)
+				"Particles": Config.particles = !Config.particles
+				"Camera FX": Config.camera_fx = !Config.camera_fx
+				"Shockwave": Config.shockwave = !Config.shockwave
+				"Spectrum Line": Config.spectrum_line = !Config.spectrum_line
+				"Reduced Motion": Config.reduced_motion = !Config.reduced_motion
 
 func _on_file_selected(path: String) -> void:
 	audio_path = path

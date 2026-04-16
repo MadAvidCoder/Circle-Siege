@@ -18,8 +18,9 @@ func _draw() -> void:
 
 func _process(delta: float) -> void:
 	queue_redraw()
-	var target_radius = nominal_radius * (1 + 0.3 * main.energy)
-	radius = lerp(radius, target_radius, smooth_factor) * bump
+	if !Config.reduced_motion:
+		var target_radius = nominal_radius * (1 + 0.3 * main.energy)	
+		radius = lerp(radius, target_radius, smooth_factor) * bump
 
 func pulse():
 	modulate = Color(1.0, 0.9, 0.7)
