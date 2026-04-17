@@ -12,6 +12,7 @@ var energy = 0.0
 @onready var popup = $CanvasLayer/PopupPanel
 @onready var popup_label = $CanvasLayer/PopupPanel/Label
 @onready var menu = $Menu
+@onready var player_sprite = $Player/Sprite2D
 @onready var arena = $Arena
 
 @onready var bg = $BGCanvas/Background/Gradient
@@ -21,6 +22,7 @@ func update_colours():
 	bg.material.set_shader_parameter("dark_col", Config.colours["bg_dark"])
 	bg.material.set_shader_parameter("light_col", Config.colours["bg_light"])
 	particles.texture.gradient.set_color(0, Config.colours["shockwave"])
+	player_sprite.texture.gradient.set_color(0, Config.colours["player"])
 
 func _ready() -> void:
 	update_colours()
