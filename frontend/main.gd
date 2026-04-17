@@ -17,12 +17,18 @@ var energy = 0.0
 
 @onready var bg = $BGCanvas/Background/Gradient
 @onready var particles = $BeatParticles
+@onready var title_1 = $Menu/Control/Seige
+@onready var title_2 = $Menu/Control/Slashes
+@onready var title_3 = $Menu/Control/Circle
 
 func update_colours():
 	bg.material.set_shader_parameter("dark_col", Config.colours["bg_dark"])
 	bg.material.set_shader_parameter("light_col", Config.colours["bg_light"])
 	particles.texture.gradient.set_color(0, Config.colours["shockwave"])
 	player_sprite.texture.gradient.set_color(0, Config.colours["player"])
+	title_1.add_theme_color_override("font_color", Config.colours["menu"])
+	title_2.add_theme_color_override("font_color", Config.colours["menu"])
+	title_3.add_theme_color_override("font_color", Config.colours["menu"])
 
 func _ready() -> void:
 	update_colours()
