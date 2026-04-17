@@ -27,7 +27,7 @@ var chord_telegraph_scene = preload("res://ChordTelegraph.tscn")
 @onready var camera = $"../Camera2D"
 @onready var shock = $"../Shockwave/Line2D"
 @onready var particles = $"../BeatParticles"
-@onready var background = $"../Background/GradientBg"
+@onready var background = $"../BGCanvas/Background/Gradient"
 
 var gap_centre = 0.0
 var gap_until_t = 0.0

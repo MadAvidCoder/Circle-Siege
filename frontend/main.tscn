@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://ct3pruaskr5c8" path="res://player.gd" id="1_0xm2m"]
 [ext_resource type="Script" uid="uid://7p7q3bn7v4xc" path="res://main.gd" id="1_1bvp3"]
 [ext_resource type="Script" uid="uid://xgqcskvhu27c" path="res://arena.gd" id="1_ig7tw"]
-[ext_resource type="Script" uid="uid://cp3v8ek5q5rxx" path="res://background.gd" id="2_kek77"]
 [ext_resource type="Script" uid="uid://bsvr1pwowkyt3" path="res://spectrum.gd" id="2_lquwl"]
 [ext_resource type="Shader" uid="uid://ko830oq10orc" path="res://flow_gradient.gdshader" id="3_4c57u"]
 [ext_resource type="Script" uid="uid://bcjx3y7dh7e2g" path="res://shockwave.gd" id="3_272bh"]
@@ -90,15 +89,25 @@ size = Vector2(77, 77)
 [node name="Node2D" type="Node2D" unique_id=1525720828]
 script = ExtResource("1_1bvp3")
 
-[node name="Background" type="Node2D" parent="." unique_id=1056660292]
-script = ExtResource("2_kek77")
+[node name="BGCanvas" type="CanvasLayer" parent="." unique_id=118254061]
+layer = -1
 
-[node name="GradientBg" type="ColorRect" parent="Background" unique_id=1088083627]
+[node name="Background" type="Control" parent="BGCanvas" unique_id=550646476]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Gradient" type="ColorRect" parent="BGCanvas/Background" unique_id=1088083627]
 material = SubResource("ShaderMaterial_efxa6")
-offset_left = -1056.0
-offset_top = -594.0
-offset_right = 1056.0
-offset_bottom = 594.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("4_efxa6")
 

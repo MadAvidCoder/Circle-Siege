@@ -1,14 +1,14 @@
 extends Node2D
 
-@export var radius: int = 400
-@export var thickness = 6
+@export var radius: float = 400.0
+@export var thickness: float = 6.0
 
 @export var option_font: Font
 @export var option_selected_font: Font
 @export var option_color = Color(0.85, 0.9, 1.0, 0.72)
 @export var option_selected_color = Color(0.3, 1.0, 0.8, 1.0)
-@export var label_padding = 45.0 
-@export var font_size = 38
+@export var label_padding: float = 45.0 
+@export var font_size: int = 38
 
 var segments = 4
 
@@ -152,7 +152,11 @@ func _unhandled_input(event: InputEvent) -> void:
 					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 				"Windowed":
 					Config.window_mode = Config.WindowModes.WINDOWED
-					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MAXIMIZED)
+					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+					var window_size = Vector2i(1280, 720)
+					DisplayServer.window_set_size(window_size)
+					var screen_size = DisplayServer.screen_get_size()
+					DisplayServer.window_set_position((screen_size - window_size) / 2)
 				"Exclusive Fullscreen":
 					Config.window_mode = Config.WindowModes.EXCLUSIVE_FULLSCREEN
 					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
