@@ -162,8 +162,19 @@ func _unhandled_input(event: InputEvent) -> void:
 					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
 				"Cyber", "Ink", "Monochrome", "Warmth":
 					Config.cur_palette = render_options[selected_segment]["label"].to_lower()
-					Config.colours = Config.palettes[Config.cur_palette]
-					main.update_colours()
+					if !Config.contrast and !Config.colourblind:
+						Config.colours = Config.palettes[Config.cur_palette]
+						main.update_colours()
+				"High Contrast":
+					if Config.contrast:
+						Config.contrast = false
+						Config.colours = Config.palettes[Config.cur_palette]
+						main.update_colours()
+					else:
+						Config.contrast = true
+						Config.colourblind = false
+						Config.colours = Config.palettes["high_contrast"]
+						main.update_colours()
 
 func _on_file_selected(path: String) -> void:
 	audio_path = path
@@ -225,6 +236,16 @@ func get_status(option: Dictionary) -> Array:
 				return ["[ SELECTED ]", Color(0.3,0.7,1.0,1)]
 			else:
 				return ["", Color(1.0,1.0,1.0,0)]
+		"High Contrast":
+			if Config.contrast:
+				return ["[ ON ]", Color(0.3,1,0.3,1)]
+			else:
+				return ["[ OFF ]", Color(1.0,0.3,0.3,1)]
+		"Colourblind Mode":
+			if Config.colourblind:
+				return ["[ ON ]", Color(0.3,1,0.3,1)]
+			else:
+				return ["[ OFF ]", Color(1.0,0.3,0.3,1)]
 		_:
 			return ["", Color(1, 1, 1, 0)]
 
