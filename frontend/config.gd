@@ -82,6 +82,22 @@ var palettes = {
 		"menu": Color("#ffffff"),
 		"tooltip": Color("#ffff00"),
 	},
+	"colourblind": {
+		"bg_dark": Color("#23507a"),
+		"bg_light": Color("#e1efe6"),
+		"player": Color("#255b2c"),
+		"obstacles": Color("#d08419"),
+		"beat_obstacle": Color("#be39a2"),
+		"shockwave": Color("#3cbcc3"),
+		"spectrum": Color("#f6d846"),
+		"near_miss": Color("#efe676"),
+		"telegraph_chord": Color("#106eb5"),
+		"telegraph_radial": Color("#ce5c5c"),
+		"selection": Color("#693fb6"),
+		"menu": Color("#fafffc"),
+		"menu_selected": Color("#3cbcc3"),
+		"tooltip": Color("#fafffc"),
+	},
 }
 
 var cur_palette = "cyber"

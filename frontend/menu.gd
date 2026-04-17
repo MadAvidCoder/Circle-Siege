@@ -175,6 +175,16 @@ func _unhandled_input(event: InputEvent) -> void:
 						Config.colourblind = false
 						Config.colours = Config.palettes["high_contrast"]
 						main.update_colours()
+				"Colourblind Mode":
+					if Config.colourblind:
+						Config.colourblind = false
+						Config.colours = Config.palettes[Config.cur_palette]
+						main.update_colours()
+					else:
+						Config.colourblind = true
+						Config.contrast = false
+						Config.colours = Config.palettes["colourblind"]
+						main.update_colours()
 
 func _on_file_selected(path: String) -> void:
 	audio_path = path
