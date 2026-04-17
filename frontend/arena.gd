@@ -11,6 +11,7 @@ var radius = nominal_radius
 @onready var timer = $Timer
 
 var bump = 1.0
+var extra = 1.0
 
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, radius, Color(0,0,0,0.2))
@@ -20,7 +21,9 @@ func _process(delta: float) -> void:
 	queue_redraw()
 	if !Config.reduced_motion:
 		var target_radius = nominal_radius * (1 + 0.3 * main.energy)
-		radius = lerp(radius, target_radius, smooth_factor) * bump
+		radius = lerp(radius, target_radius, smooth_factor) * bump * extra
+	else:
+		radius = nominal_radius * 1.21 * extra
 
 func pulse():
 	modulate = Config.colours["shockwave"].lightened(0.42)

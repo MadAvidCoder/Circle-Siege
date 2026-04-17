@@ -21,6 +21,25 @@ var energy = 0.0
 @onready var title_2 = $Menu/Control/Slashes
 @onready var title_3 = $Menu/Control/Circle
 
+var diffs = {
+	"chill": {
+		"threshold": 7.0,
+		"refractory": [14, 10, 6],
+	},
+	"normal": {
+		"threshold": 5.0,
+		"refractory": [10, 6, 3],
+	},
+	"hard": {
+		"threshold": 4.2,
+		"refractory": [8, 5, 2],
+	},
+	"insane": {
+		"threshold": 3.6,
+		"refractory": [6, 4, 1],
+	},
+}
+
 func update_colours():
 	bg.material.set_shader_parameter("dark_col", Config.colours["bg_dark"])
 	bg.material.set_shader_parameter("light_col", Config.colours["bg_light"])
@@ -33,7 +52,7 @@ func update_colours():
 func _ready() -> void:
 	update_colours()
 
-func start(path: String) -> void:
+func start(path: String, difficulty: String) -> void:
 	var wav_path = path
 	var analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
 	var analysis_path = ProjectSettings.globalize_path("user://analysis.jsonl")
@@ -46,7 +65,9 @@ func start(path: String) -> void:
 	OS.execute(analyser_path, [
 		"analyze-wav",
 		"--input", wav_path,
-		"--output", analysis_path
+		"--output", analysis_path,
+		"--threshold", diffs[difficulty]["threshold"],
+		"--refractory", diffs[difficulty]["refractory"][0], diffs[difficulty]["refractory"][1], diffs[difficulty]["refractory"][2]
 	])
 	
 	var records = []

@@ -105,6 +105,7 @@ var angle_offset = -PI / 2.0 - (sector_size / 2.0)
 @onready var file_sel = $"../FileDialog"
 @onready var main = $".."
 @onready var camera = $"../Camera2D"
+@onready var arena = $"../Arena"
 
 var audio_path = ""
 
@@ -141,7 +142,34 @@ func _unhandled_input(event: InputEvent) -> void:
 					stack.pop_back()
 					stack.append(render_options)
 					file_sel.show()
-				"Normal": main.start(audio_path)
+				"Chill":
+					main.start(audio_path, "chill")
+					main.telegraph_time = 0.47
+					main.radial_speed = 442.0
+					main.chord_speed = 646.0
+					main.travel_time = arena.radius / main.radial_speed
+					arena.extra = 1.1
+				"Normal":
+					main.start(audio_path, "normal")
+					main.telegraph_time = 0.30
+					main.radial_speed = 520.0
+					main.chord_speed = 760.0
+					main.travel_time = arena.radius / main.radial_speed
+					arena.extra = 1.0
+				"Hard":
+					main.start(audio_path, "hard")
+					main.telegraph_time = 0.20
+					main.radial_speed = 650.0
+					main.chord_speed = 950.0
+					main.travel_time = arena.radius / main.radial_speed
+					arena.extra = 0.9
+				"Insane":
+					main.start(audio_path, "insane")
+					main.telegraph_time = 0.12
+					main.radial_speed = 832.0
+					main.chord_speed = 1216.0
+					main.travel_time = arena.radius / main.radial_speed
+					arena.extra = 0.78
 				"Particles": Config.particles = !Config.particles
 				"Camera FX": Config.camera_fx = !Config.camera_fx
 				"Shockwave": Config.shockwave = !Config.shockwave
@@ -190,8 +218,8 @@ func _on_file_selected(path: String) -> void:
 	audio_path = path
 	render_options = [
 		{"label": "Chill", "tooltip": "Low Density, Long Telegraphs, Infinite Lives."},
-		{"label": "Normal", "tooltip": "Standard obstacle settings (recommended)"},
-		{"label": "Hard", "tooltip": "For players seeking a challenge."},
+		{"label": "Normal", "tooltip": "Standard obstacle speed and density (recommended)"},
+		{"label": "Hard", "tooltip": "More, faster obstacles, requiring strong focus and agility."},
 		{"label": "Back", "tooltip": "Return to input selection."},
 	]
 	stack.append(render_options)

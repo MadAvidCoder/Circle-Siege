@@ -33,8 +33,11 @@ struct AnalyzeArgs {
     input: String,
     #[arg(short, long)]
     output: String,
+    #[arg(long)]
+    threshold: f32,
+    #[arg(long, num_args=3)]
+    refractory: Vec<u32>,
 }
-
 
 #[derive(Serialize)]
 #[serde(tag = "type")]
@@ -126,8 +129,8 @@ struct BandDetect {
 const BAND_EMA: f32 = 0.25;
 const ONSET_MEAN_EMA: f32 = 0.08;
 const ONSET_DEV_EMA: f32 = 0.08;
-const THRESH_K: f32 = 5.0;
-const REFRACTORY_FRAMES: [usize; 3] = [10, 6, 3];
+// const THRESH_K: f32 = 5.0;
+// const REFRACTORY_FRAMES: [usize; 3] = [10, 6, 3];
 
 impl BandDetect {
     fn new() -> Self {
@@ -257,8 +260,8 @@ fn main() -> anyhow::Result<()> {
                     detector.dev = detector.dev * (1.0 - ONSET_DEV_EMA) + abs_deviation * ONSET_DEV_EMA;
 
                     detector.refractory = detector.refractory.saturating_sub(1);
-                    if onset > detector.mean + THRESH_K * detector.dev && detector.refractory == 0 {
-                        let strength = ((onset - (detector.mean + THRESH_K * detector.dev)) / (detector.mean + THRESH_K * detector.dev + 1e-8)).clamp(0.0, 1.0);
+                    if onset > detector.mean + &params.threshold * detector.dev && detector.refractory == 0 {
+                        let strength = ((onset - (detector.mean + &params.threshold * detector.dev)) / (detector.mean + &params.threshold * detector.dev + 1e-8)).clamp(0.0, 1.0);
 
                         records.push(Record::Event(EventRecord {
                             t,
@@ -266,7 +269,7 @@ fn main() -> anyhow::Result<()> {
                             s: strength,
                         }));
 
-                        detector.refractory = REFRACTORY_FRAMES[b];
+                        detector.refractory = params.refractory[b] as usize;
                     }
                 }
 
