@@ -83,9 +83,9 @@ var options = [
 				"label": "Window Mode",
 				"tooltip": "Make visuals and gameplay easier to see or experience.",
 				"children": [
-					{"label": "Fullscreen", "tooltip": "Enable Circle Seige running in Full Screen mode (default)." },
+					{"label": "Fullscreen", "tooltip": "Enable Circle Seige running in Full-Screen mode (default)." },
 					{"label": "Windowed", "tooltip": "Enable Circle Seige running in windowed mode." },
-					{"label": "Borderless Windowed", "tooltip": "Use borderless windowed mode, for easier multitasking." },
+					{"label": "Exclusive Fullscreen", "tooltip": "True fullscreen mode. Improves performance, but makes multi-tasking harder." },
 					{"label": "Back", "tooltip": "Return to settings." },
 				],
 			},
@@ -147,6 +147,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				"Shockwave": Config.shockwave = !Config.shockwave
 				"Spectrum Line": Config.spectrum_line = !Config.spectrum_line
 				"Reduced Motion": Config.reduced_motion = !Config.reduced_motion
+				"Fullscreen":
+					Config.window_mode = Config.WindowModes.FULLSCREEN
+					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+				"Windowed":
+					Config.window_mode = Config.WindowModes.WINDOWED
+					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MAXIMIZED)
+				"Exclusive Fullscreen":
+					Config.window_mode = Config.WindowModes.EXCLUSIVE_FULLSCREEN
+					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
 
 func _on_file_selected(path: String) -> void:
 	audio_path = path
