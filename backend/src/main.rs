@@ -3,7 +3,7 @@ use clap::{Args, Parser, Subcommand};
 use serde::{Serialize};
 use std::fs::File;
 use std::io::{BufWriter, Write};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use rustfft::{Fft, FftPlanner};
 use rustfft::num_complex::Complex;
 use std::convert::TryFrom;
@@ -17,6 +17,11 @@ use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
 use symphonia::core::meta::MetadataOptions;
 use symphonia::core::probe::Hint;
 use symphonia::core::audio::Signal;
+use tokio::net::TcpListener;
+use tokio;
+use tokio_tungstenite::tungstenite::Message;
+use futures_util::stream::StreamExt;
+use futures_util::sink::SinkExt;
 
 const WINDOW: usize = 2048;
 const HOP: usize = 512;
@@ -32,6 +37,17 @@ struct CLI {
 enum Commands {
     #[command(name = "analyze-wav")]
     AnalyzeWav(AnalyzeArgs),
+    AnalyzeLive(LiveArgs),
+}
+
+#[derive(Args)]
+struct LiveArgs {
+    #[arg(short, long)]
+    port: usize,
+    #[arg(long)]
+    threshold: f32,
+    #[arg(long, num_args=3)]
+    refractory: Vec<u32>,
 }
 
 #[derive(Args)]
@@ -395,7 +411,36 @@ fn main() -> anyhow::Result<()> {
             serde_json::to_writer(&mut w, &Record::Done)?;
             w.write_all(b"\n")?;
         },
+        Commands::AnalyzeLive(params) => {
+            tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()?
+                .block_on(run_live(params))?;
+        },
     }
 
     Ok(())
+}
+
+async fn run_live(params: LiveArgs) -> anyhow::Result<()> {
+    let mut addr = params.port.to_string();
+    addr.insert_str(0, "127.0.0.1:");
+    let listener = TcpListener::bind(&addr).await?;
+    println!("WebSocket server running at ws://{}", addr);
+
+    let (stream, _) = listener.accept().await?;
+    let ws_stream = tokio_tungstenite::accept_async(stream).await?;
+    println!("WebSocket client connected");
+
+    let (mut ws_write, _) = ws_stream.split();
+
+    loop {
+        let dummy = serde_json::to_string(&Record::Event(EventRecord {
+            t: 0.0,
+            band: Bands::Mid,
+            s: 0.75,
+        }))?;
+        ws_write.send(Message::Text(dummy.into())).await?;
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+    }
 }
