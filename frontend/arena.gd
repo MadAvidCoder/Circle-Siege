@@ -7,7 +7,6 @@ extends Node2D
 var radius = nominal_radius
 
 @onready var main = $".."
-@onready var stream = $"../AudioStreamPlayer"
 @onready var timer = $Timer
 
 var bump = 1.0

@@ -242,7 +242,6 @@ script = ExtResource("16_2cqfq")
 [node name="FileDialog" type="FileDialog" parent="." unique_id=416975433]
 oversampling_override = 1.0
 title = "Open a File"
-position = Vector2i(0, 36)
 file_mode = 0
 access = 2
 filters = PackedStringArray("*.mp3;MP3 Audio Files;audio/mpeg", "*.wav;WAV Audio Files;audio/wav", "*.ogg;OGG Vorbis Audio;audio/ogg")

@@ -38,6 +38,35 @@ var next_beat_index = 0
 func _ready() -> void:
 	gap_centre = (player.global_position - arena.global_position).angle()
 
+func beat(idx):
+	arena.pulse()
+	if !Config.reduced_motion:
+		background.on_beat()
+	if idx % 4 == 0:
+		if !Config.reduced_motion:
+			if Config.camera_fx:
+				camera.trigger_beat()
+			if Config.shockwave:
+				shock.fire(arena.radius, arena.radius + 300, Config.colours["shockwave"])
+			if Config.particles:
+				particles.global_position = arena.global_position
+				particles.process_material.emission_ring_inner_radius = arena.radius + 33
+				particles.process_material.emission_ring_radius = arena.radius + 34
+				particles.restart()
+	elif idx % 4 == 2:
+		spawn_radial(randf() * TAU, Config.colours["beat_obstacle"], radial_speed*0.7)
+
+func queue_event(e):
+	var base_theta = fmod(e["t"] * 1.321, TAU)
+	
+	match e["band"].to_lower():
+		"low":
+			var theta_a = base_theta
+			var theta_b = base_theta + PI * 0.22 + e["s"] * 1.5
+			spawn_chord(theta_a, theta_b, Config.colours["obstacles"])
+		"mid", "high":
+			spawn_radial(base_theta, Config.colours["obstacles"])
+
 func _process(_delta: float) -> void:
 	gap_width_deg = lerp(max_gap, min_gap, pow(main.energy, 1.12))
 	
@@ -53,42 +82,18 @@ func _process(_delta: float) -> void:
 	
 	while next_beat_index < main.beats.size() and main.beats[next_beat_index] <= song_time:
 		next_beat_index += 1
-		arena.pulse()
-		if !Config.reduced_motion:
-			background.on_beat()
-		if next_beat_index % 4 == 0:
-			if !Config.reduced_motion:
-				if Config.camera_fx:
-					camera.trigger_beat()
-				if Config.shockwave:
-					shock.fire(arena.radius, arena.radius + 300, Config.colours["shockwave"])
-				if Config.particles:
-					particles.global_position = arena.global_position
-					particles.process_material.emission_ring_inner_radius = arena.radius + 33
-					particles.process_material.emission_ring_radius = arena.radius + 34
-					particles.restart()
-		elif next_beat_index % 4 == 2:
-			spawn_radial(randf() * TAU, Config.colours["beat_obstacle"], radial_speed*0.7)
+		beat(next_beat_index)
 	
 	while next_event_index < main.events.size():
 		var event = main.events[next_event_index]
 		if event["t"] <= lookahead_time:
-			var base_theta = fmod(event["t"] * 1.321, TAU)
-			
-			match event["band"].to_lower():
-				"low":
-					var theta_a = base_theta
-					var theta_b = base_theta + PI * 0.22 + event["s"] * 1.5
-					spawn_chord(theta_a, theta_b, Config.colours["obstacles"])
-				"mid", "high":
-					spawn_radial(base_theta, Config.colours["obstacles"])
+			queue_event(event)
 			next_event_index += 1
 		else:
 			break
 	
 	if debug_draw_gap:
 		queue_redraw()
-
 
 func lock_gap(time: float) -> void:
 	var song_time = stream.get_playback_position()

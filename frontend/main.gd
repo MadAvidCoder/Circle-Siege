@@ -20,6 +20,7 @@ var energy = 0.0
 @onready var title_2 = $Menu/Control/Slashes
 @onready var title_3 = $Menu/Control/Circle
 @onready var lives = $LivesDisplay
+@onready var director = $Director
 
 var diffs = {
 	"chill": {
@@ -41,34 +42,37 @@ var diffs = {
 }
 
 var ws = WebSocketPeer.new()
-var ws_conn = false
+var backend_process
+var mode
+var beat_index = 0
+
 func _ready() -> void:
-	OS.create_process("C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe", [
-		"analyze-live",
-		"--port", 9001,
-		"--threshold", 1,
-	], true)
 	update_colours()
+	start_live("a")
 
 func _process(_delta: float) -> void:
 	energy = get_energy($AudioStreamPlayer.get_playback_position())
-	if not ws_conn:
-		var e = ws.connect_to_url("ws://127.0.0.1:9001")
-		if e == OK:
-			ws_conn = true
-	else:
-		ws.poll()
-		var state = ws.get_ready_state()
-		if state == WebSocketPeer.STATE_OPEN:
-			while ws.get_available_packet_count():
-				var packet = ws.get_packet()
-				if ws.was_string_packet():
-					var packet_text = packet.get_string_from_utf8()
-					print("< Got text data from server: %s" % packet_text)
-		elif state == WebSocketPeer.STATE_CLOSED:
-			var code = ws.get_close_code()
-			print("WebSocket closed with code: %d. Clean: %s" % [code, code != -1])
-			set_process(false)
+	if mode != "live":
+		return
+	ws.poll()
+	var state = ws.get_ready_state()
+	if state == WebSocketPeer.STATE_OPEN:
+		while ws.get_available_packet_count():
+			var packet = ws.get_packet()
+			if ws.was_string_packet():
+				var packet_text = packet.get_string_from_utf8()
+				var record = JSON.parse_string(packet_text)
+				match record["type"]:
+					"meta": meta = record
+					"energy": energy = record["e"]
+					"event": director.queue_event(record)
+					"beat":
+						beat_index += 1
+						director.beat(beat_index)
+	
+	elif state == WebSocketPeer.STATE_CLOSED:
+		# TODO: handle disconnect
+		get_tree().reload_current_scene()
 
 func update_colours():
 	bg.material.set_shader_parameter("dark_col", Config.colours["bg_dark"])
@@ -79,7 +83,36 @@ func update_colours():
 	title_2.add_theme_color_override("font_color", Config.colours["menu"])
 	title_3.add_theme_color_override("font_color", Config.colours["menu"])
 
+func start_live(difficulty: String) -> void:
+	var analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
+	
+	popup_label.text = "Connecting to Websocket.\nPlease Wait..."
+	popup.popup_centered()
+	
+	await get_tree().create_timer(0.1).timeout
+
+	backend_process = OS.create_process(analyser_path, [
+		"analyze-live",
+		"--port", 9001,
+		"--threshold", 1,
+	], true)
+	
+	await get_tree().create_timer(0.5).timeout
+	while ws.connect_to_url("ws://127.0.0.1:9001") != OK:
+		await get_tree().create_timer(0.5).timeout
+	
+	mode = "live"
+	lives.init($Player.lives)
+	popup.hide()
+	arena.show()
+	menu.hide()
+
+func _exit_tree():
+	if backend_process and OS.is_process_running(backend_process):
+		OS.kill(backend_process)
+
 func start(path: String, difficulty: String) -> void:
+	mode = "file"
 	var wav_path = path
 	var analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
 	var analysis_path = ProjectSettings.globalize_path("user://analysis.jsonl")
