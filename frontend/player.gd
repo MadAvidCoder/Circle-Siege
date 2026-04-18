@@ -13,6 +13,7 @@ extends CharacterBody2D
 @onready var player_size = $Sprite2D.get_rect().size.x
 @onready var near_miss_fx = $NearMissFX
 @onready var sprite = $Sprite2D
+@onready var lives_display = $"../LivesDisplay"
 
 var lives = 3
 var invulnerable = false
@@ -54,6 +55,7 @@ func hit():
 	if invulnerable:
 		return
 	lives -= 1
+	lives_display.set_lives(lives)
 	if lives <= 0:
 		die()
 	else:
@@ -67,17 +69,18 @@ func die():
 func flash_and_invuln():
 	invulnerable = true
 	for i in range(4):
-		sprite.texture.gradient.set_color(0, Config.colours["player"].lightened(0.8))
+		sprite.texture.gradient.set_color(0, Config.colours["player_invulnerable"])
 		await get_tree().create_timer(0.06).timeout
 		sprite.texture.gradient.set_color(0, Config.colours["player"])
 		await get_tree().create_timer(0.06).timeout
-		
-	sprite.texture.gradient.set_color(0, Config.colours["player"].lightened(0.65))
+	
+	lives_display.show_invulnerable(1.5)
+	sprite.texture.gradient.set_color(0, Config.colours["player_invulnerable"])
 	await get_tree().create_timer(1.5).timeout
 	sprite.texture.gradient.set_color(0, Config.colours["player"])
 	
 	for i in range(2):
-		sprite.texture.gradient.set_color(0, Config.colours["player"].lightened(0.72))
+		sprite.texture.gradient.set_color(0, Config.colours["player_invulnerable"])
 		await get_tree().create_timer(0.09).timeout
 		sprite.texture.gradient.set_color(0, Config.colours["player"])
 		await get_tree().create_timer(0.09).timeout

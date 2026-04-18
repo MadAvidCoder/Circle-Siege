@@ -14,12 +14,12 @@ var energy = 0.0
 @onready var menu = $Menu
 @onready var player_sprite = $Player/Sprite2D
 @onready var arena = $Arena
-
 @onready var bg = $BGCanvas/Background/Gradient
 @onready var particles = $BeatParticles
 @onready var title_1 = $Menu/Control/Seige
 @onready var title_2 = $Menu/Control/Slashes
 @onready var title_3 = $Menu/Control/Circle
+@onready var lives = $LivesDisplay
 
 var diffs = {
 	"chill": {
@@ -98,6 +98,7 @@ func start(path: String, difficulty: String) -> void:
 	$AudioStreamPlayer.stream = AudioStreamWAV.load_from_buffer(wav_file.get_buffer(wav_file.get_length()))
 	wav_file.close()
 	$AudioStreamPlayer.play()
+	lives.init($Player.lives)
 	popup.hide()
 	arena.show()
 	menu.hide()

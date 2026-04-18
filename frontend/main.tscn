@@ -15,6 +15,7 @@
 [ext_resource type="FontVariation" uid="uid://c8e4vkk8i2i6t" path="res://syne_bold.tres" id="7_vivmo"]
 [ext_resource type="FontVariation" uid="uid://bf13ivlhnlvix" path="res://audiowide.tres" id="8_2cqfq"]
 [ext_resource type="Script" uid="uid://ddyw6hltilyq3" path="res://near_miss_fx.gd" id="11_dg77c"]
+[ext_resource type="Script" uid="uid://dfyqagpui1vqj" path="res://lives_display.gd" id="16_2cqfq"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_efxa6"]
 shader = ExtResource("3_4c57u")
@@ -89,6 +90,9 @@ size = Vector2(77, 77)
 
 [node name="Node2D" type="Node2D" unique_id=1525720828]
 script = ExtResource("1_1bvp3")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1222265113]
+script = ExtResource("6_7mycd")
 
 [node name="BGCanvas" type="CanvasLayer" parent="." unique_id=118254061]
 layer = -1
@@ -225,8 +229,15 @@ shape = SubResource("RectangleShape2D_efxa6")
 
 [node name="Telegraphs" type="Node2D" parent="." unique_id=1995094716]
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=1222265113]
-script = ExtResource("6_7mycd")
+[node name="LivesDisplay" type="Control" parent="." unique_id=1220633502]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -960.0
+offset_top = -540.0
+offset_right = -960.0
+offset_bottom = -540.0
+mouse_filter = 2
+script = ExtResource("16_2cqfq")
 
 [node name="FileDialog" type="FileDialog" parent="." unique_id=416975433]
 oversampling_override = 1.0
