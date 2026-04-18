@@ -1,6 +1,7 @@
 mod record;
 mod processor;
 
+use ringbuf::traits::{Consumer, Producer, Split};
 use clap::{Args, Parser, Subcommand};
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -18,8 +19,11 @@ use tokio;
 use tokio_tungstenite::tungstenite::Message;
 use futures_util::stream::StreamExt;
 use futures_util::sink::SinkExt;
-use record::{Record, Bands, EventRecord, MetaRecord};
+use record::{Record, MetaRecord};
 use processor::ProcessorState;
+use ringbuf::HeapRb;
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use tokio::sync::mpsc::Receiver;
 
 #[derive(Parser)]
 #[command(name = "CircleSiegeBackend")]
@@ -231,18 +235,80 @@ fn main() -> anyhow::Result<()> {
             w.write_all(b"\n")?;
         },
         Commands::AnalyzeLive(params) => {
+            let host = cpal::default_host();
+
+            for device in host.input_devices().unwrap() {
+                let name = device.description().unwrap();
+                println!("Input device: {}", name);
+            }
+
+            let device = host.default_output_device().expect("no output devices");
+
+            let config = device.default_input_config()?;
+            let sample_rate = config.sample_rate();
+
+            let rb = HeapRb::<f32>::new(sample_rate as usize * 2usize);
+            let (mut producer, mut consumer) = rb.split();
+
+            let stream = device.build_input_stream(
+                &config.into(),
+                move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                    for &sample in data {
+                        let _ = producer.try_push(sample);
+                    }
+                },
+                move |err| {
+                    eprintln!("stream error {:?}", err);
+                },
+                None,
+            )?;
+            stream.play()?;
+
+            let (tx, mut rx) = tokio::sync::mpsc::channel(1024);
+
+            std::thread::spawn(move || {
+                let mut processor = ProcessorState::new(sample_rate, params.threshold, params.refractory);
+
+                let mut buffer = vec![0f32; WINDOW];
+                let mut temp = Vec::with_capacity(WINDOW);
+
+                loop {
+                    while temp.len() < WINDOW {
+                        match consumer.try_pop() {
+                            Some(s) => temp.push(s),
+                            None => {
+                                std::thread::sleep(std::time::Duration::from_millis(1));
+                                continue;
+                            }
+                        }
+                    }
+
+                    buffer.copy_from_slice(&temp[..WINDOW]);
+                    processor.time += HOP as f64 / sample_rate as f64;
+
+                    let events = processor.process(&buffer);
+
+                    for e in events {
+                        if tx.blocking_send(e).is_err() {
+                            return;
+                        }
+                    }
+                    temp.drain(..HOP);
+                }
+            });
+
             tokio::runtime::Builder::new_multi_thread()
                 .enable_all()
                 .build()?
-                .block_on(run_live(params))?;
+                .block_on(run_live(params.port, &mut rx))?;
         },
     }
 
     Ok(())
 }
 
-async fn run_live(params: LiveArgs) -> anyhow::Result<()> {
-    let mut addr = params.port.to_string();
+async fn run_live(port: usize, rx: &mut Receiver<Record>) -> anyhow::Result<()> {
+    let mut addr = port.to_string();
     addr.insert_str(0, "127.0.0.1:");
     let listener = TcpListener::bind(&addr).await?;
     println!("WebSocket server running at ws://{}", addr);
@@ -254,12 +320,9 @@ async fn run_live(params: LiveArgs) -> anyhow::Result<()> {
     let (mut ws_write, _) = ws_stream.split();
 
     loop {
-        let dummy = serde_json::to_string(&Record::Event(EventRecord {
-            t: 0.0,
-            band: Bands::Mid,
-            s: 0.75,
-        }))?;
-        ws_write.send(Message::Text(dummy.into())).await?;
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        while let Some(record) = rx.recv().await {
+            let msg = serde_json::to_string(&record)?;
+            ws_write.send(Message::Text(msg.into())).await?;
+        }
     }
 }
