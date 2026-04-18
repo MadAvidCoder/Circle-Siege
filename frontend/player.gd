@@ -14,9 +14,26 @@ extends CharacterBody2D
 @onready var near_miss_fx = $NearMissFX
 @onready var sprite = $Sprite2D
 @onready var lives_display = $"../LivesDisplay"
+@onready var arena = $"../Arena"
 
 var lives = 3
 var invulnerable = false
+var margin = 4.0
+
+func stop_at_edge():
+	var dir = global_position + arena.global_position
+	var dist = dir.length()
+	var allowed_radius = max(0.0, arena.radius - margin - player_size/2)
+	if dist <= allowed_radius:
+		return
+	
+	var radial_norm = dir.normalized()
+	global_position = arena.global_position + radial_norm * allowed_radius
+	
+	if velocity.length() > 0.001:
+		var tangent = Vector2(-radial_norm.y, radial_norm.x)
+		var tangential_speed = velocity.dot(tangent)
+		velocity = tangent * tangential_speed
 
 func _physics_process(delta: float) -> void:
 	var mouse = get_global_mouse_position()
@@ -41,6 +58,8 @@ func _physics_process(delta: float) -> void:
 
 	velocity += accel * delta
 	move_and_slide()
+	if arena.visible:
+		stop_at_edge()
 
 func _on_near_miss_area_entered(area: Area2D) -> void:
 	if !area.is_in_group("projectiles"):
@@ -64,7 +83,7 @@ func hit():
 func die():
 	# TODO: Proper game over
 	print("TBD")
-	get_tree().reload_current_scene()
+	get_tree().reload_current_scene.call_deferred()
 
 func flash_and_invuln():
 	invulnerable = true
