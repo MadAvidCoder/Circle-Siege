@@ -90,7 +90,7 @@ var options = [
 			{"label": "Back", "tooltip": "Return to main menu."},
 		]
 	},
-	{"label": "Credits/Help", "tooltip": "Learn about the game."},
+	{"label": "About", "tooltip": "View the instructions and the source code (external link)."},
 	{"label": "Quit", "tooltip": "Exit the game."},
 ]
 
@@ -218,6 +218,7 @@ func _unhandled_input(event: InputEvent) -> void:
 						Config.contrast = false
 						Config.colours = Config.palettes["colourblind"]
 						main.update_colours()
+				"About": OS.shell_open("https://github.com/MadAvidCoder/Circle-Seige")
 
 func _on_file_selected(path: String) -> void:
 	audio_path = path
