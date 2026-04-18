@@ -4,12 +4,19 @@ use serde::{Serialize};
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::sync::Arc;
-use hound;
-use itertools::Itertools;
 use rustfft::{Fft, FftPlanner};
 use rustfft::num_complex::Complex;
 use std::convert::TryFrom;
+use std::path::Path;
 use aubio;
+use symphonia::core::audio::AudioBufferRef;
+use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
+use symphonia::core::errors::Error;
+use symphonia::core::formats::FormatOptions;
+use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
+use symphonia::core::meta::MetadataOptions;
+use symphonia::core::probe::Hint;
+use symphonia::core::audio::Signal;
 
 const WINDOW: usize = 2048;
 const HOP: usize = 512;
@@ -104,7 +111,6 @@ struct MetaRecord {
     channels: u16,
     win: u32,
     hop: u32,
-    duration: f64,
 }
 
 #[derive(Serialize)]
@@ -142,27 +148,119 @@ fn main() -> anyhow::Result<()> {
     let args = CLI::parse();
     match args.command {
         Commands::AnalyzeWav(params) => {
-            let mut reader = hound::WavReader::open(&params.input).unwrap();
-            let spec = reader.spec();
+            let path = Path::new(&params.input);
 
-            let samples: Vec<f32> = reader
-                .samples::<i16>()
-                .chunks(spec.channels as usize)
-                .into_iter()
-                .map(|chunk| {
-                    let mut sum: f32 = 0.0;
-                    let mut count: f32 = 0.0;
-                    for s in chunk {
-                        if let Ok(sample) = s {
-                            sum += sample as f32;
-                            count += 1.0
+            let file = Box::new(File::open(path).unwrap());
+            let stream = MediaSourceStream::new(file, MediaSourceStreamOptions::default());
+
+            let mut hint = Hint::new();
+            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                hint.with_extension(ext);
+            }
+
+            let format_opts = FormatOptions::default();
+            let metadata_opts = MetadataOptions::default();
+            let decoder_opts = DecoderOptions::default();
+
+            let probed = symphonia::default::get_probe()
+                .format(&hint, stream, &format_opts, &metadata_opts)
+                .expect("Format unsupported");
+
+            let mut format = probed.format;
+
+            let track = format
+                .tracks()
+                .iter()
+                .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
+                .expect("no supported audio tracks");
+            let track_id = track.id;
+
+            let mut decoder = symphonia::default::get_codecs()
+                .make(&track.codec_params, &decoder_opts)
+                .expect("unsupported codec");
+
+            let mut samples: Vec<f32> = Vec::new();
+            let mut sample_rate = 44100u32;
+            let mut channels: u16 = 2;
+
+            loop {
+                let packet = match format.next_packet() {
+                    Ok(packet) => packet,
+                    Err(Error::IoError(err)) if err.kind() == std::io::ErrorKind::UnexpectedEof => {
+                        break
+                    },
+                    Err(err) => return Err(err.into()),
+                };
+
+                if packet.track_id() != track_id { continue; }
+
+                match decoder.decode(&packet) {
+                    Ok(AudioBufferRef::F32(buf)) => {
+                        sample_rate = buf.spec().rate as u32;
+                        channels = buf.spec().channels.count() as u16;
+
+                        for frame in 0..buf.frames() {
+                            let mut sum = 0.0;
+                            for ch in 0..channels as usize {
+                                sum += buf.chan(ch)[frame];
+                            }
+                            samples.push(sum / channels as f32);
                         }
-                    }
-                    (sum / count) / 37268.0
-                })
-                .collect();
+                    },
+                    Ok(AudioBufferRef::U8(buf)) => {
+                        sample_rate = buf.spec().rate as u32;
+                        channels = buf.spec().channels.count() as u16;
 
-            let mut tempo = aubio::Tempo::new(aubio::OnsetMode::SpecDiff, WINDOW, HOP, spec.sample_rate)?;
+                        for frame in 0..buf.frames() {
+                            let mut sum = 0.0;
+                            for ch in 0..channels as usize {
+                                sum += buf.chan(ch)[frame] as f32 / 128.0 - 1.0;
+                            }
+                            samples.push(sum / channels as f32);
+                        }
+                    },
+                    Ok(AudioBufferRef::U16(buf)) => {
+                        sample_rate = buf.spec().rate as u32;
+                        let channels = buf.spec().channels.count() as u16;
+
+                        for frame in 0..buf.frames() {
+                            let mut sum = 0.0;
+                            for ch in 0..channels as usize {
+                                sum += buf.chan(ch)[frame] as f32 / 32768.0 - 1.0;
+                            }
+                            samples.push(sum / channels as f32);
+                        }
+                    },
+                    Ok(AudioBufferRef::S16(buf)) => {
+                        sample_rate = buf.spec().rate as u32;
+                        channels = buf.spec().channels.count() as u16;
+
+                        for frame in 0..buf.frames() {
+                            let mut sum = 0.0;
+                            for ch in 0..channels as usize {
+                                sum += buf.chan(ch)[frame] as f32 / 32768.0;
+                            }
+                            samples.push(sum / channels as f32);
+                        }
+                    },
+                    Ok(AudioBufferRef::S32(buf)) => {
+                        sample_rate = buf.spec().rate as u32;
+                        let channels = buf.spec().channels.count() as u16;
+
+                        for frame in 0..buf.frames() {
+                            let mut sum = 0.0;
+                            for ch in 0..channels as usize {
+                                sum += buf.chan(ch)[frame] as f32 / 2147483648.0;
+                            }
+                            samples.push(sum / channels as f32);
+                        }
+                    },
+                    Err(Error::DecodeError(_)) => continue,
+                    _ => break,
+                }
+            }
+
+            let mut tempo = aubio::Tempo::new(aubio::OnsetMode::SpecDiff, WINDOW, HOP, sample_rate)?;
             let mut last_beat_time = -1.0;
 
             let hann: Vec<f32> = (0..WINDOW)
@@ -173,7 +271,7 @@ fn main() -> anyhow::Result<()> {
 
             let fft: Arc<dyn Fft<f32>> = FftPlanner::new().plan_fft_forward(WINDOW);
 
-            let bin_hz = spec.sample_rate as f32 / WINDOW as f32;
+            let bin_hz = sample_rate as f32 / WINDOW as f32;
             let bands = [
                 (20.0, 160.0),
                 (160.0, 2000.0),
@@ -194,7 +292,7 @@ fn main() -> anyhow::Result<()> {
             let mut i = 0;
             while (HOP * i) + WINDOW < samples.len() {
                 let start = i * HOP;
-                let t = start as f64 / spec.sample_rate as f64;
+                let t = start as f64 / sample_rate as f64;
 
                 let rms = (samples[start..start+WINDOW].iter().map(|&x: &f32| x * x).sum::<f32>() / WINDOW as f32).sqrt();
                 rms_max = rms.max(rms_max * 0.9995);
@@ -280,11 +378,10 @@ fn main() -> anyhow::Result<()> {
             let mut w = BufWriter::new(file);
 
             let meta = Record::Meta(MetaRecord {
-                sr: spec.sample_rate,
-                channels: spec.channels,
+                sr: sample_rate,
+                channels,
                 win: WINDOW as u32,
                 hop: HOP as u32,
-                duration: (reader.len() / spec.channels as u32) as f64 / spec.sample_rate as f64,
             });
 
             serde_json::to_writer(&mut w, &meta)?;
