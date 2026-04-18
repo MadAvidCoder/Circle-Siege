@@ -119,8 +119,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		camera.trigger_select()
 		if render_options[selected_segment].has("children"):
-			if render_options[selected_segment]["label"] == "Demo":
-				audio_path = ProjectSettings.globalize_path("res://demo.wav")
+			match render_options[selected_segment]["label"]:
+				"Demo":
+					audio_path = ProjectSettings.globalize_path("res://demo.wav")
+				"System Audio":
+					audio_path = "system"
 			render_options = render_options[selected_segment]["children"]
 			segments = render_options.size()
 			sector_size = TAU / segments

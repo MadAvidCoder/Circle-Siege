@@ -48,7 +48,6 @@ var beat_index = 0
 
 func _ready() -> void:
 	update_colours()
-	start_live("a")
 
 func _process(_delta: float) -> void:
 	energy = get_energy($AudioStreamPlayer.get_playback_position())
@@ -83,6 +82,12 @@ func update_colours():
 	title_2.add_theme_color_override("font_color", Config.colours["menu"])
 	title_3.add_theme_color_override("font_color", Config.colours["menu"])
 
+func start(path, difficulty):
+	if path == "system":
+		start_live(difficulty)
+	else:
+		start_file(path, difficulty)
+
 func start_live(difficulty: String) -> void:
 	var analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
 	
@@ -94,7 +99,8 @@ func start_live(difficulty: String) -> void:
 	backend_process = OS.create_process(analyser_path, [
 		"analyze-live",
 		"--port", 9001,
-		"--threshold", 1,
+		"--threshold", diffs[difficulty]["threshold"],
+		"--refractory", diffs[difficulty]["refractory"][0], diffs[difficulty]["refractory"][1], diffs[difficulty]["refractory"][2]
 	], true)
 	
 	await get_tree().create_timer(0.5).timeout
@@ -111,7 +117,7 @@ func _exit_tree():
 	if backend_process and OS.is_process_running(backend_process):
 		OS.kill(backend_process)
 
-func start(path: String, difficulty: String) -> void:
+func start_file(path: String, difficulty: String) -> void:
 	mode = "file"
 	var wav_path = path
 	var analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
