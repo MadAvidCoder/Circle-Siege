@@ -21,6 +21,7 @@ var energy = 0.0
 @onready var title_3 = $Menu/Control/Circle
 @onready var lives = $LivesDisplay
 @onready var director = $Director
+@onready var line = $Spectrum
 
 var diffs = {
 	"chill": {
@@ -65,6 +66,7 @@ func _process(_delta: float) -> void:
 					"meta": meta = record
 					"energy": energy = record["e"]
 					"event": director.queue_event(record)
+					"spectrum": line.new_data(record)
 					"beat":
 						beat_index += 1
 						director.beat(beat_index)

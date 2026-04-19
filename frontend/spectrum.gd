@@ -12,10 +12,14 @@ var last_bins = []
 @onready var width = get_viewport_rect().size.x * 0.98
 @onready var x_offset = get_viewport_rect().size.x * 0.02 / 2
 
+var bins = []
+
+func new_data(p):
+	bins = p["bins"]
+	queue_redraw()
+
 func _draw() -> void:
 	if Config.spectrum_line and !Config.reduced_motion:
-		var time = stream.get_playback_position()
-		var bins = main.get_spectrum(time)
 		if bins.size() == 0:
 			return
 		
@@ -54,5 +58,7 @@ func _draw() -> void:
 		draw_polyline(pts, Config.colours["spectrum"], 1, true)
 
 func _process(_delta: float) -> void:
-	if Config.spectrum_line and !Config.reduced_motion:
+	if stream.playing and Config.spectrum_line and !Config.reduced_motion:
+		var time = stream.get_playback_position()
+		bins = main.get_spectrum(time)
 		queue_redraw()
