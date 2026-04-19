@@ -1,4 +1,4 @@
-use serde::{Serialize};
+use serde::Serialize;
 use std::convert::TryFrom;
 
 #[derive(Serialize)]
@@ -12,11 +12,11 @@ pub enum Record {
     Band(BandEnergies),
     #[serde(rename = "spectrum")]
     Spectrum(SpectrumRecord),
-    #[serde(rename  = "beat")]
+    #[serde(rename = "beat")]
     Beat(BeatRecord),
     #[serde(rename = "event")]
     Event(EventRecord),
-    #[serde(rename= "done")]
+    #[serde(rename = "done")]
     Done,
 }
 
@@ -71,7 +71,7 @@ pub struct MetaRecord {
 #[derive(Serialize)]
 pub struct EnergyRecord {
     pub t: f64,
-    pub e: f32
+    pub e: f32,
 }
 
 #[derive(Serialize)]

@@ -1,28 +1,28 @@
-mod record;
 mod processor;
+mod record;
 
-use ringbuf::traits::{Consumer, Producer, Split};
 use clap::{Args, Parser, Subcommand};
+use futures_util::sink::SinkExt;
+use futures_util::stream::StreamExt;
+use processor::ProcessorState;
+use record::{MetaRecord, Record};
+use ringbuf::HeapRb;
+use ringbuf::traits::{Consumer, Producer, Split};
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 use symphonia::core::audio::AudioBufferRef;
-use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
+use symphonia::core::audio::Signal;
+use symphonia::core::codecs::{CODEC_TYPE_NULL, DecoderOptions};
 use symphonia::core::errors::Error;
 use symphonia::core::formats::FormatOptions;
 use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
 use symphonia::core::meta::MetadataOptions;
 use symphonia::core::probe::Hint;
-use symphonia::core::audio::Signal;
-use tokio::net::TcpListener;
 use tokio;
-use tokio_tungstenite::tungstenite::Message;
-use futures_util::stream::StreamExt;
-use futures_util::sink::SinkExt;
-use record::{Record, MetaRecord};
-use processor::ProcessorState;
-use ringbuf::HeapRb;
+use tokio::net::TcpListener;
 use tokio::sync::mpsc::Receiver;
+use tokio_tungstenite::tungstenite::Message;
 use wasapi;
 
 #[derive(Parser)]
@@ -45,7 +45,7 @@ struct LiveArgs {
     port: usize,
     #[arg(long)]
     threshold: f32,
-    #[arg(long, num_args=3)]
+    #[arg(long, num_args = 3)]
     refractory: Vec<u32>,
 }
 
@@ -57,7 +57,7 @@ struct AnalyzeArgs {
     output: String,
     #[arg(long)]
     threshold: f32,
-    #[arg(long, num_args=3)]
+    #[arg(long, num_args = 3)]
     refractory: Vec<u32>,
 }
 
@@ -77,7 +77,13 @@ struct BandDetect {
 
 impl BandDetect {
     fn new() -> Self {
-        BandDetect { prev_smooth: 0.0, smooth: 0.0, mean: 0.0, dev: 0.0, refractory: 0 }
+        BandDetect {
+            prev_smooth: 0.0,
+            smooth: 0.0,
+            mean: 0.0,
+            dev: 0.0,
+            refractory: 0,
+        }
     }
 }
 
@@ -124,12 +130,14 @@ fn main() -> anyhow::Result<()> {
                 let packet = match format.next_packet() {
                     Ok(packet) => packet,
                     Err(Error::IoError(err)) if err.kind() == std::io::ErrorKind::UnexpectedEof => {
-                        break
-                    },
+                        break;
+                    }
                     Err(err) => return Err(err.into()),
                 };
 
-                if packet.track_id() != track_id { continue; }
+                if packet.track_id() != track_id {
+                    continue;
+                }
 
                 match decoder.decode(&packet) {
                     Ok(AudioBufferRef::F32(buf)) => {
@@ -143,7 +151,7 @@ fn main() -> anyhow::Result<()> {
                             }
                             samples.push(sum / channels as f32);
                         }
-                    },
+                    }
                     Ok(AudioBufferRef::U8(buf)) => {
                         sample_rate = buf.spec().rate as u32;
                         channels = buf.spec().channels.count() as u16;
@@ -155,7 +163,7 @@ fn main() -> anyhow::Result<()> {
                             }
                             samples.push(sum / channels as f32);
                         }
-                    },
+                    }
                     Ok(AudioBufferRef::U16(buf)) => {
                         sample_rate = buf.spec().rate as u32;
                         let channels = buf.spec().channels.count() as u16;
@@ -167,7 +175,7 @@ fn main() -> anyhow::Result<()> {
                             }
                             samples.push(sum / channels as f32);
                         }
-                    },
+                    }
                     Ok(AudioBufferRef::S16(buf)) => {
                         sample_rate = buf.spec().rate as u32;
                         channels = buf.spec().channels.count() as u16;
@@ -179,7 +187,7 @@ fn main() -> anyhow::Result<()> {
                             }
                             samples.push(sum / channels as f32);
                         }
-                    },
+                    }
                     Ok(AudioBufferRef::S32(buf)) => {
                         sample_rate = buf.spec().rate as u32;
                         let channels = buf.spec().channels.count() as u16;
@@ -191,13 +199,14 @@ fn main() -> anyhow::Result<()> {
                             }
                             samples.push(sum / channels as f32);
                         }
-                    },
+                    }
                     Err(Error::DecodeError(_)) => continue,
                     _ => break,
                 }
             }
 
-            let mut processor = ProcessorState::new(sample_rate, params.threshold, params.refractory);
+            let mut processor =
+                ProcessorState::new(sample_rate, params.threshold, params.refractory);
 
             let mut records: Vec<Record> = Vec::new();
 
@@ -206,7 +215,7 @@ fn main() -> anyhow::Result<()> {
                 let start = i * HOP;
                 processor.time = start as f64 / sample_rate as f64;
 
-                let slice = &samples[start..start+WINDOW];
+                let slice = &samples[start..start + WINDOW];
 
                 records.extend(processor.process(slice));
 
@@ -233,7 +242,7 @@ fn main() -> anyhow::Result<()> {
 
             serde_json::to_writer(&mut w, &Record::Done)?;
             w.write_all(b"\n")?;
-        },
+        }
         Commands::AnalyzeLive(params) => {
             let rb = HeapRb::<f32>::new(48000usize * 2usize);
             let (mut producer, mut consumer) = rb.split();
@@ -246,18 +255,27 @@ fn main() -> anyhow::Result<()> {
                 let enumerator = wasapi::DeviceEnumerator::new().unwrap();
 
                 // TODO: Support device selecton
-                let device = enumerator.get_default_device(&wasapi::Direction::Render).expect("no output device");
+                let device = enumerator
+                    .get_default_device(&wasapi::Direction::Render)
+                    .expect("no output device");
 
                 let mut audio_client = device.get_iaudioclient().unwrap();
                 let format = audio_client.get_mixformat().unwrap();
 
-                sr_tx.blocking_send(format.get_samplespersec() as u32).unwrap();
+                sr_tx
+                    .blocking_send(format.get_samplespersec() as u32)
+                    .unwrap();
 
-                audio_client.initialize_client(
-                    &format,
-                    &wasapi::Direction::Capture,
-                    &wasapi::StreamMode::PollingShared {autoconvert: true, buffer_duration_hns: 100000},
-                ).unwrap();
+                audio_client
+                    .initialize_client(
+                        &format,
+                        &wasapi::Direction::Capture,
+                        &wasapi::StreamMode::PollingShared {
+                            autoconvert: true,
+                            buffer_duration_hns: 100000,
+                        },
+                    )
+                    .unwrap();
 
                 let capture_client = audio_client.get_audiocaptureclient().unwrap();
                 audio_client.start_stream().unwrap();
@@ -270,38 +288,51 @@ fn main() -> anyhow::Result<()> {
                             Ok(s) => s,
                             Err(e) => {
                                 eprintln!("{:?}", e);
-                                continue
-                            },
-                        }) else { continue };
+                                continue;
+                            }
+                        }) else {
+                            continue;
+                        };
                         if packet_size == 0 {
                             break;
                         }
 
-                        let bytes_per_frame = format.get_nchannels() as usize * (format.get_validbitspersample() as usize / 8);
+                        let bytes_per_frame = format.get_nchannels() as usize
+                            * (format.get_validbitspersample() as usize / 8);
 
                         let needed = packet_size as usize * bytes_per_frame;
                         if buf.len() < needed {
                             buf.resize(needed, 0);
                         }
 
-                        let Ok((frames_read, _)) = capture_client.read_from_device(&mut buf) else { continue };
+                        let Ok((frames_read, _)) = capture_client.read_from_device(&mut buf) else {
+                            continue;
+                        };
                         let bytes_read = frames_read as usize * bytes_per_frame;
                         let raw_bytes = &buf[..bytes_read];
 
                         match format.get_subformat().unwrap() {
                             wasapi::SampleType::Float => unsafe {
-                                let slice = std::slice::from_raw_parts(raw_bytes.as_ptr() as *const f32, bytes_read / 4);
+                                let slice = std::slice::from_raw_parts(
+                                    raw_bytes.as_ptr() as *const f32,
+                                    bytes_read / 4,
+                                );
                                 for frame in slice.chunks(format.get_nchannels() as usize) {
                                     let mono = frame.iter().sum::<f32>() / frame.len() as f32;
                                     let _ = producer.try_push(mono);
                                 }
                             },
                             wasapi::SampleType::Int => unsafe {
-                                let slice = std::slice::from_raw_parts(raw_bytes.as_ptr() as *const i16, bytes_read / 2);
-                                for frame in slice.chunks(format.get_nchannels() as usize ) {
-                                    let mono = frame.iter()
+                                let slice = std::slice::from_raw_parts(
+                                    raw_bytes.as_ptr() as *const i16,
+                                    bytes_read / 2,
+                                );
+                                for frame in slice.chunks(format.get_nchannels() as usize) {
+                                    let mono = frame
+                                        .iter()
                                         .map(|&v| v as f32 / i16::MAX as f32)
-                                        .sum::<f32>() / frame.len() as f32;
+                                        .sum::<f32>()
+                                        / frame.len() as f32;
                                     let _ = producer.try_push(mono);
                                 }
                             },
@@ -314,7 +345,8 @@ fn main() -> anyhow::Result<()> {
             std::thread::spawn(move || {
                 let sample_rate = sr_rx.blocking_recv().unwrap();
 
-                let mut processor = ProcessorState::new(sample_rate, params.threshold, params.refractory);
+                let mut processor =
+                    ProcessorState::new(sample_rate, params.threshold, params.refractory);
                 let mut buffer = vec![0f32; WINDOW];
                 let mut temp = Vec::with_capacity(WINDOW);
 
@@ -344,7 +376,7 @@ fn main() -> anyhow::Result<()> {
                 .enable_all()
                 .build()?
                 .block_on(run_live(params.port, &mut rx))?;
-        },
+        }
     }
 
     Ok(())
