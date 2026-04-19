@@ -91,16 +91,17 @@ impl ProcessorState {
 
         let energies: [f32; 3] = self.bins.map(|(lo, hi)| power_spectrum[lo..=hi].iter().sum::<f32>());
 
-        records.push(
-            Record::Band(
-                BandEnergies {
-                    t: self.time,
-                    low: energies[0],
-                    mid: energies[1],
-                    high: energies[2]
-                }
-            )
-        );
+        // disabled for huge performance gain
+        // records.push(
+        //     Record::Band(
+        //         BandEnergies {
+        //             t: self.time,
+        //             low: energies[0],
+        //             mid: energies[1],
+        //             high: energies[2]
+        //         }
+        //     )
+        // );
 
         for b in 0..3 {
             let energy = energies[b];
