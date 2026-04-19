@@ -22,8 +22,8 @@ use futures_util::sink::SinkExt;
 use record::{Record, MetaRecord};
 use processor::ProcessorState;
 use ringbuf::HeapRb;
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use tokio::sync::mpsc::Receiver;
+use wasapi;
 
 #[derive(Parser)]
 #[command(name = "CircleSiegeBackend")]
@@ -235,40 +235,82 @@ fn main() -> anyhow::Result<()> {
             w.write_all(b"\n")?;
         },
         Commands::AnalyzeLive(params) => {
-            let host = cpal::default_host();
-
-            for device in host.input_devices().unwrap() {
-                let name = device.description().unwrap();
-                println!("Input device: {}", name);
-            }
-
-            let device = host.default_output_device().expect("no output devices");
-
-            let config = device.default_input_config()?;
-            let sample_rate = config.sample_rate();
-
-            let rb = HeapRb::<f32>::new(sample_rate as usize * 2usize);
+            let rb = HeapRb::<f32>::new(48000usize * 2usize);
             let (mut producer, mut consumer) = rb.split();
 
-            let stream = device.build_input_stream(
-                &config.into(),
-                move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                    for &sample in data {
-                        let _ = producer.try_push(sample);
-                    }
-                },
-                move |err| {
-                    eprintln!("stream error {:?}", err);
-                },
-                None,
-            )?;
-            stream.play()?;
-
             let (tx, mut rx) = tokio::sync::mpsc::channel(1024);
+            let (sr_tx, mut sr_rx) = tokio::sync::mpsc::channel(102);
 
             std::thread::spawn(move || {
-                let mut processor = ProcessorState::new(sample_rate, params.threshold, params.refractory);
+                wasapi::initialize_mta().unwrap();
+                let enumerator = wasapi::DeviceEnumerator::new().unwrap();
 
+                // TODO: Support device selecton
+                let device = enumerator.get_default_device(&wasapi::Direction::Render).expect("no output device");
+
+                let mut audio_client = device.get_iaudioclient().unwrap();
+                let format = audio_client.get_mixformat().unwrap();
+
+                sr_tx.blocking_send(format.get_samplespersec() as u32).unwrap();
+
+                audio_client.initialize_client(
+                    &format,
+                    &wasapi::Direction::Capture,
+                    &wasapi::StreamMode::PollingShared {autoconvert: true, buffer_duration_hns: 100000},
+                ).unwrap();
+
+                let capture_client = audio_client.get_audiocaptureclient().unwrap();
+                audio_client.start_stream().unwrap();
+
+                loop {
+                    loop {
+                        let Some(packet_size) = (match capture_client.get_next_packet_size() {
+                            Ok(s) => s,
+                            Err(e) => {
+                                eprintln!("{:?}", e);
+                                continue
+                            },
+                        }) else { continue };
+                        if packet_size == 0 {
+                            break;
+                        }
+
+                        let bytes_per_frame = format.get_nchannels() as usize * (format.get_validbitspersample() as usize / 8);
+                        let mut buf = vec![0u8; (packet_size as usize) * bytes_per_frame];
+
+                        let Ok((frames_read, _)) = capture_client.read_from_device(&mut buf) else { continue };
+                        let bytes_read = frames_read as usize * bytes_per_frame;
+                        let raw_bytes = &buf[..bytes_read];
+
+                        let samples: Vec<f32> = match format.get_subformat().unwrap() {
+                            wasapi::SampleType::Float => unsafe {
+                                std::slice::from_raw_parts(raw_bytes.as_ptr() as *const f32, bytes_read / 4).to_vec()
+                            },
+                            wasapi::SampleType::Int => unsafe {
+                                std::slice::from_raw_parts(raw_bytes.as_ptr() as *const i16, bytes_read / 2)
+                                    .iter()
+                                    .map(|&v| v as f32 / i16::MAX as f32)
+                                    .collect()
+                            },
+                        };
+
+                        let mono: Vec<f32> = if format.get_nchannels() == 2 {
+                            (&samples).chunks(2).map(|c| (c[0] + c[1]) * 0.5).collect()
+                        } else {
+                            samples
+                        };
+
+                        for s in mono {
+                            let _ = producer.try_push(s);
+                        }
+                    }
+                }
+            });
+
+            std::thread::spawn(move || {
+                let sample_rate = sr_rx.blocking_recv().unwrap();
+
+                let mut processor = ProcessorState::new(sample_rate, params.threshold, params.refractory);
                 let mut buffer = vec![0f32; WINDOW];
                 let mut temp = Vec::with_capacity(WINDOW);
 
@@ -282,16 +324,13 @@ fn main() -> anyhow::Result<()> {
                             }
                         }
                     }
-
                     buffer.copy_from_slice(&temp[..WINDOW]);
                     processor.time += HOP as f64 / sample_rate as f64;
 
                     let events = processor.process(&buffer);
 
                     for e in events {
-                        if tx.blocking_send(e).is_err() {
-                            return;
-                        }
+                        let _ = tx.blocking_send(e);
                     }
                     temp.drain(..HOP);
                 }
