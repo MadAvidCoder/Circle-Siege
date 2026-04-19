@@ -4,13 +4,13 @@ extends Node2D
 @export var thickness: float = 6
 @export var smooth_factor: float = 0.18
 
-var radius = nominal_radius
+var radius: float = nominal_radius
 
 @onready var main = $".."
 @onready var timer = $Timer
 
-var bump = 1.0
-var extra = 1.0
+var bump: float = 1.0
+var extra: float = 1.0
 
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, radius, Color(0,0,0,0.2))

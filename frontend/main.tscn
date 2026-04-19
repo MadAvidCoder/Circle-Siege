@@ -202,7 +202,6 @@ one_shot = true
 
 [node name="Director" type="Node2D" parent="." unique_id=1025563058]
 script = ExtResource("3_h2yge")
-debug_draw_gap = false
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=589192664]
 collision_mask = 2

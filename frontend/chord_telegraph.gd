@@ -1,6 +1,6 @@
 extends Node2D
 
-@export var telegraph_time = 0.5
+@export var telegraph_time: float = 0.5
 
 var t_left: float
 var a: Vector2

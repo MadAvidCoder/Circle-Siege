@@ -8,11 +8,11 @@ extends Node2D
 @export var label_padding: float = 45.0 
 @export var font_size: int = 40
 
-var segments = 4
+var segments: int = 4
 
-var selected_segment = -1
+var selected_segment: int = -1
 
-var options = [
+const options = [
 	{
 		"label": "Play",
 		"tooltip": "Start the game and choose your mode!",
@@ -221,7 +221,7 @@ func _unhandled_input(event: InputEvent) -> void:
 						Config.contrast = false
 						Config.colours = Config.palettes["colourblind"]
 						main.update_colours()
-				"About": OS.shell_open("https://github.com/MadAvidCoder/Circle-Seige")
+				"About": OS.shell_open("https://github.com/MadAvidCoder/Circle-Siege")
 
 func _on_file_selected(path: String) -> void:
 	audio_path = path

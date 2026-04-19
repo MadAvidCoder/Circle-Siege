@@ -1,12 +1,12 @@
 extends Node2D
 
 @export var gap_width_deg: float = 40.0 
-var min_gap = 28
-var max_gap = 60 
+@export var min_gap: int = 28
+@export var max_gap: int = 60 
 @export var gap_margin_deg: float = 10.0
 @export var min_gap_window: float = 0.75
 
-@export var debug_draw_gap: bool = true
+@export var debug_draw_gap: bool = false
 @export var debug_gap_alpha: float = 0.22
 
 @export var radial_speed: float = 520.0
@@ -29,11 +29,11 @@ var chord_telegraph_scene = preload("res://ChordTelegraph.tscn")
 @onready var particles = $"../BeatParticles"
 @onready var background = $"../BGCanvas/Background/Gradient"
 
-var gap_centre = 0.0
+var gap_centre: float = 0.0
 var gap_until_t = 0.0
 
-var next_event_index = 0
-var next_beat_index = 0
+var next_event_index: int = 0
+var next_beat_index: int = 0
 
 func _ready() -> void:
 	gap_centre = (player.global_position - arena.global_position).angle()

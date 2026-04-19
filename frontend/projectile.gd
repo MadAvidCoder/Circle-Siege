@@ -5,9 +5,9 @@ enum MoveKind {
 	CHORD
 }
 
-@export var speed = 450.0
-@export var radius = 8.0
-@export var damage = 1
+@export var speed: float = 450.0
+@export var radius: float = 8.0
+@export var damage: int = 1
 
 var move_kind = MoveKind.RADIAL
 
@@ -15,10 +15,10 @@ var dir = Vector2.ZERO
 
 var chord_a: Vector2
 var chord_b: Vector2
-var chord_t = 0.0
-var chord_len = 1.0
+var chord_t: float = 0.0
+var chord_len: float = 1.0
 
-var near_missed = false
+var near_missed: bool = false
 
 @onready var main = get_tree().current_scene
 

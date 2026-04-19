@@ -112,17 +112,17 @@ var palettes = {
 	},
 }
 
-var cur_palette = "cyber"
-var colours = palettes[cur_palette]
+var cur_palette: String = "cyber"
+var colours: Dictionary = palettes[cur_palette]
 
-var particles = true
-var camera_fx = true
-var shockwave = true
-var spectrum_line = true
-var reduced_motion = false
-var colourblind = false
-var contrast = false
-var window_mode = WindowModes.FULLSCREEN
+var particles: bool = true
+var camera_fx: bool = true
+var shockwave: bool = true
+var spectrum_line: bool = true
+var reduced_motion: bool = false
+var colourblind: bool = false
+var contrast: bool = false
+var window_mode: WindowModes = WindowModes.FULLSCREEN
 
 func _ready() -> void:
 	match window_mode:

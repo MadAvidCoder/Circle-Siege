@@ -1,6 +1,6 @@
 extends Node2D
 
-@export var telegraph_time = 0.4
+@export var telegraph_time: float = 0.4
 
 var t_left: float
 var arena_centre: Vector2
@@ -9,7 +9,7 @@ var dir: Vector2
 var projectile_scene: PackedScene
 var projectile_speed: float
 var projectiles_parent: Node
-var col_pro
+var col_pro: Color
 
 func setup(_arena_centre: Vector2, _spawn_pos: Vector2, _dir: Vector2, _projectile_scene: PackedScene, _projectile_speed: float, _projectiles_parent: Node, _telegraph: float, cr: Color = Color("d9a0d4")) -> void:
 	arena_centre = _arena_centre

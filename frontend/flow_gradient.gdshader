@@ -5,31 +5,28 @@ uniform float drift_strength = 0.20;
 uniform float warp2 = 0.06;
 uniform float warp2_scale = 1.8;
 
-// Moving points (0..1 UV)
 uniform vec2 p0 = vec2(0.25, 0.30);
 uniform vec2 p1 = vec2(0.75, 0.28);
 uniform vec2 p2 = vec2(0.35, 0.78);
 uniform vec2 p3 = vec2(0.78, 0.75);
 
-// Duotone palette (mature defaults: ink + paper)
-uniform vec3 dark_col: source_color = vec3(0.04, 0.03, 0.06); // near-black blue
-uniform vec3 light_col: source_color = vec3(0.83, 0.78, 1); // cool light
+uniform vec3 dark_col: source_color = vec3(0.04, 0.03, 0.06);
+uniform vec3 light_col: source_color = vec3(0.83, 0.78, 1);
 
-uniform float mix_strength = 0.47; // 0..1, how visible the gradient is
-uniform float mid = 0.50;          // center point for remap
-uniform float range = 0.55;        // widen/narrow variation
+uniform float mix_strength = 0.47;
+uniform float mid = 0.50;
+uniform float range = 0.55;
 
-// Controls
-uniform float softness = 1.5;     // 0.6..2.0 (higher = smoother blobs)
-uniform float flow = 0.07;        // 0.05..0.20 (subtle warping)
-uniform float time_scale = 0.035; // slow base motion
-uniform float energy = 0.0;       // 0..1
-uniform float beat = 0.0;         // 0..1 short pulse
+uniform float softness = 1.5;
+uniform float flow = 0.07;
+uniform float time_scale = 0.035;
+uniform float energy = 0.0;
+uniform float beat = 0.0;
 
-uniform float contrast = 1.0;    // 0.9..1.3
-uniform float grain = 0.010;      // 0.0..0.02
-uniform float vignette = 0.44;    // 0..0.4
-uniform float brightness = 1.0;   // global brightness
+uniform float contrast = 1.0;
+uniform float grain = 0.010;
+uniform float vignette = 0.44;
+uniform float brightness = 1.0;
 
 float hash(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -37,7 +34,6 @@ float hash(vec2 p) {
     return fract(p.x * p.y);
 }
 
-// Very smooth “flow” warp (tiny)
 vec2 warp(vec2 uv, float t, float amt) {
     uv += amt * vec2(
         sin((uv.y * 3.0) + t * 0.7) + sin((uv.y * 7.0) - t * 0.35),
@@ -46,7 +42,6 @@ vec2 warp(vec2 uv, float t, float amt) {
     return uv;
 }
 
-// Gaussian weights (creamy blends)
 float w_gauss(vec2 uv, vec2 p, float k) {
     vec2 d = uv - p;
     float r2 = dot(d, d);
@@ -63,53 +58,42 @@ void fragment() {
 	float warp_amt = flow * (0.7 + energy * 0.9 + beat * 0.8);
 	uv = warp(uv, t, warp_amt);
 
-	// Second, even gentler warp layer (adds life without “wiggle”)
 	uv = warp(uv, t * warp2_scale + 13.7, warp2 * (0.7 + energy * 0.6));
 
-    // k controls blob size; lower k = larger/smoother
-    float k = mix(6.0, 2.2, clamp(softness, 0.0, 2.0)); // softness up => k down
+    float k = mix(6.0, 2.2, clamp(softness, 0.0, 2.0));
     float w0 = w_gauss(uv, p0, k);
     float w1 = w_gauss(uv, p1, k);
     float w2 = w_gauss(uv, p2, k);
     float w3 = w_gauss(uv, p3, k);
 
-    // Combine into a single smooth field [0..1]
 	float s = w0 + w1 + w2 + w3 + 1e-6;
 
-	// Normalize weights
 	float n0 = w0 / s;
 	float n1 = w1 / s;
 	float n2 = w2 / s;
 	float n3 = w3 / s;
 
-	// Dominance: how much the strongest point “wins” at this pixel.
-	// This produces big smooth regions but with real variation.
+
 	float dom = max(max(n0, n1), max(n2, n3)); // 0.25..1.0
 
-	// Map dominance to 0..1
 	float field = clamp((dom - 0.25) / 0.75, 0.0, 1.0);
 
-    // Contrast / beat pop
     float pop = 1.0 + beat * 0.25;
     field = pow(clamp(field, 0.0, 1.0), 1.0 / (contrast * pop));
 
-    // Duotone mapping
 	float f = (field - mid) / max(range, 1e-4) + 0.5;
 	f = clamp(f, 0.0, 1.0);
 
 	vec3 duo = mix(dark_col, light_col, f);
-	vec3 base = mix(dark_col, light_col, 0.5); // neutral midpoint
+	vec3 base = mix(dark_col, light_col, 0.5);
 	vec3 col = mix(base, duo, mix_strength);
 	
-    // Vignette
     vec2 q = uv - vec2(0.5);
     float v = smoothstep(0.9, 0.1, dot(q, q) * 2.0);
     col *= mix(1.0 - vignette, 1.0, v);
 
-    // Energy gently affects brightness
     col *= brightness * (0.92 + energy * 0.18 + beat * 0.08);
 
-    // Grain/dither
     float g = (hash(uv * vec2(900.0, 500.0) + TIME) - 0.5) * 2.0;
     col += g * grain;
 
