@@ -24,4 +24,8 @@ shape = SubResource("RectangleShape2D_xh6v2")
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2016308449]
 texture = SubResource("GradientTexture2D_t7eop")
 
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="." unique_id=1659577809]
+rect = Rect2(-17.5, -17.5, 35, 35)
+
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="screen_exited" from="VisibleOnScreenNotifier2D" to="." method="_on_screen_exited"]
