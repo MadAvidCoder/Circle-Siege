@@ -103,7 +103,7 @@ func start_live(difficulty: String) -> void:
 		"--port", 9001,
 		"--threshold", diffs[difficulty]["threshold"],
 		"--refractory", diffs[difficulty]["refractory"][0], diffs[difficulty]["refractory"][1], diffs[difficulty]["refractory"][2]
-	], true)
+	], false)
 	
 	await get_tree().create_timer(0.5).timeout
 	while ws.connect_to_url("ws://127.0.0.1:9001") != OK:
