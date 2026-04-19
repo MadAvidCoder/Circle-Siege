@@ -217,7 +217,7 @@ fn main() -> anyhow::Result<()> {
 
                 let slice = &samples[start..start + WINDOW];
 
-                records.extend(processor.process(slice));
+                records.extend(processor.process(slice, i % 3 == 0, i % 2 == 0));
 
                 i += 1;
             }
@@ -350,6 +350,8 @@ fn main() -> anyhow::Result<()> {
                 let mut buffer = vec![0f32; WINDOW];
                 let mut temp = Vec::with_capacity(WINDOW);
 
+                let mut counter = 0usize;
+
                 loop {
                     while temp.len() < WINDOW {
                         match consumer.try_pop() {
@@ -363,12 +365,13 @@ fn main() -> anyhow::Result<()> {
                     buffer.copy_from_slice(&temp[..WINDOW]);
                     processor.time += HOP as f64 / sample_rate as f64;
 
-                    let events = processor.process(&buffer);
+                    let events = processor.process(&buffer, counter % 3 == 0, counter % 2 == 0);
 
                     for e in events {
                         let _ = tx.blocking_send(e);
                     }
                     temp.drain(..HOP);
+                    counter += 1;
                 }
             });
 

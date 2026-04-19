@@ -51,7 +51,7 @@ impl ProcessorState {
         }
     }
 
-    pub fn process(&mut self, samples: &[f32]) -> Vec<Record> {
+    pub fn process(&mut self, samples: &[f32], spectrum: bool, rec_energy: bool) -> Vec<Record> {
         let mut records: Vec<Record> = Vec::new();
 
         let rms = (samples.iter().map(|&x: &f32| x * x).sum::<f32>() / WINDOW as f32).sqrt();
@@ -60,10 +60,12 @@ impl ProcessorState {
         let e_raw = (rms / (self.rms_max + 1e-6)).clamp(0.0, 1.0);
         self.e_smooth = self.e_smooth * 0.8 + e_raw * 0.2;
 
-        records.push(Record::Energy(EnergyRecord {
-            t: self.time,
-            e: self.e_smooth,
-        }));
+        if rec_energy {
+            records.push(Record::Energy(EnergyRecord {
+                t: self.time,
+                e: self.e_smooth,
+            }));
+        }
 
         self.fft_in.clear();
         self.fft_in.extend(
@@ -80,10 +82,12 @@ impl ProcessorState {
             .map(|c| c.norm_sqr())
             .collect();
 
-        records.push(Record::Spectrum(SpectrumRecord {
-            t: self.time,
-            bins: power_spectrum.clone(),
-        }));
+        if spectrum {
+            records.push(Record::Spectrum(SpectrumRecord {
+                t: self.time,
+                bins: power_spectrum.clone(),
+            }));
+        }
 
         let aubio_input = samples.to_vec();
         self.tempo.do_(&aubio_input, &mut [0.0f32; 1]).unwrap();
