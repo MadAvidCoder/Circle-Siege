@@ -17,7 +17,7 @@ const options = [
 		"label": "Play",
 		"tooltip": "Start the game and choose your mode!",
 		"children": [
-			{"label": "File", "tooltip": "Supply your own WAV file."},
+			{"label": "File", "tooltip": "Supply your own audio file"},
 			{
 				"label": "Demo",
 				"tooltip": "Play the built-in track.",
@@ -30,7 +30,7 @@ const options = [
 			},
 			{
 				"label": "System Audio",
-				"tooltip": "Dynamically generate the level based on system audio.",
+				"tooltip": "Dynamically generate the level based on system audio. [EXPERIMENTAL]",
 				"children": [
 					{"label": "Chill", "tooltip": "Low Density, Long Telegraphs, Infinite Lives."},
 					{"label": "Normal", "tooltip": "Standard obstacle settings (recommended)"},
@@ -226,7 +226,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_file_selected(path: String) -> void:
 	audio_path = path
 	render_options = [
-		{"label": "Chill", "tooltip": "Low Density, Long Telegraphs, Infinite Lives."},
+		{"label": "Chill", "tooltip": "Low Density, Long Telegraphs, Slower Projectiles."},
 		{"label": "Normal", "tooltip": "Standard obstacle speed and density (recommended)"},
 		{"label": "Hard", "tooltip": "More, faster obstacles, requiring strong focus and agility."},
 		{"label": "Back", "tooltip": "Return to input selection."},
