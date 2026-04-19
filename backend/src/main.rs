@@ -262,6 +262,8 @@ fn main() -> anyhow::Result<()> {
                 let capture_client = audio_client.get_audiocaptureclient().unwrap();
                 audio_client.start_stream().unwrap();
 
+                let mut buf: Vec<u8> = Vec::new();
+
                 loop {
                     loop {
                         let Some(packet_size) = (match capture_client.get_next_packet_size() {
@@ -276,34 +278,36 @@ fn main() -> anyhow::Result<()> {
                         }
 
                         let bytes_per_frame = format.get_nchannels() as usize * (format.get_validbitspersample() as usize / 8);
-                        let mut buf = vec![0u8; (packet_size as usize) * bytes_per_frame];
+
+                        let needed = packet_size as usize * bytes_per_frame;
+                        if buf.len() < needed {
+                            buf.resize(needed, 0);
+                        }
 
                         let Ok((frames_read, _)) = capture_client.read_from_device(&mut buf) else { continue };
                         let bytes_read = frames_read as usize * bytes_per_frame;
                         let raw_bytes = &buf[..bytes_read];
 
-                        let samples: Vec<f32> = match format.get_subformat().unwrap() {
+                        match format.get_subformat().unwrap() {
                             wasapi::SampleType::Float => unsafe {
-                                std::slice::from_raw_parts(raw_bytes.as_ptr() as *const f32, bytes_read / 4).to_vec()
+                                let slice = std::slice::from_raw_parts(raw_bytes.as_ptr() as *const f32, bytes_read / 4);
+                                for frame in slice.chunks(format.get_nchannels() as usize) {
+                                    let mono = frame.iter().sum::<f32>() / frame.len() as f32;
+                                    let _ = producer.try_push(mono);
+                                }
                             },
                             wasapi::SampleType::Int => unsafe {
-                                std::slice::from_raw_parts(raw_bytes.as_ptr() as *const i16, bytes_read / 2)
-                                    .iter()
-                                    .map(|&v| v as f32 / i16::MAX as f32)
-                                    .collect()
+                                let slice = std::slice::from_raw_parts(raw_bytes.as_ptr() as *const i16, bytes_read / 2);
+                                for frame in slice.chunks(format.get_nchannels() as usize ) {
+                                    let mono = frame.iter()
+                                        .map(|&v| v as f32 / i16::MAX as f32)
+                                        .sum::<f32>() / frame.len() as f32;
+                                    let _ = producer.try_push(mono);
+                                }
                             },
                         };
-
-                        let mono: Vec<f32> = if format.get_nchannels() == 2 {
-                            (&samples).chunks(2).map(|c| (c[0] + c[1]) * 0.5).collect()
-                        } else {
-                            samples
-                        };
-
-                        for s in mono {
-                            let _ = producer.try_push(s);
-                        }
                     }
+                    std::thread::yield_now();
                 }
             });
 
@@ -319,7 +323,7 @@ fn main() -> anyhow::Result<()> {
                         match consumer.try_pop() {
                             Some(s) => temp.push(s),
                             None => {
-                                std::thread::sleep(std::time::Duration::from_millis(1));
+                                std::thread::yield_now();
                                 continue;
                             }
                         }
