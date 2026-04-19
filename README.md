@@ -38,6 +38,8 @@ To start a game, select your preferred input source - select `System Audio` to p
 ## Controls
 The only control you have to manage is your mouse! Your sprite will follow the cursor, as your weave between projectiles. Use `Space`/`Enter` to select menu options.
 
+---
+
 ## Installation
 > [!IMPORTANT]
 > **Windows Only**. (For now, due to audio loopback API compatability)
