@@ -121,7 +121,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if render_options[selected_segment].has("children"):
 			match render_options[selected_segment]["label"]:
 				"Demo":
-					audio_path = ProjectSettings.globalize_path("res://demo.wav")
+					audio_path = "demo"
 				"System Audio":
 					audio_path = "system"
 			render_options = render_options[selected_segment]["children"]
@@ -153,7 +153,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					director.chord_speed = 646.0
 					director.travel_time = arena.radius / director.radial_speed
 					arena.extra = 1.1
-					player.lives = 10
+					player.lives = 12
 				"Normal":
 					main.start(audio_path, "normal")
 					director.telegraph_time = 0.30
@@ -161,7 +161,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					director.chord_speed = 760.0
 					director.travel_time = arena.radius / director.radial_speed
 					arena.extra = 1.0
-					player.lives = 4
+					player.lives = 5
 				"Hard":
 					main.start(audio_path, "hard")
 					director.telegraph_time = 0.20
@@ -169,7 +169,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					director.chord_speed = 950.0
 					director.travel_time = arena.radius / director.radial_speed
 					arena.extra = 0.9
-					player.lives = 2
+					player.lives = 3
 				"Insane":
 					main.start(audio_path, "insane")
 					director.telegraph_time = 0.12

@@ -4,7 +4,7 @@ extends ColorRect
 @export var speed: float = 0.06
 @export var energy_follow: float = 3.5
 @export var beat_decay: float = 6.0
-@export var downbeat_every: float = 4
+@export var downbeat_every: int = 4
 
 var energy = 0.0
 var _energy_s = 0.0

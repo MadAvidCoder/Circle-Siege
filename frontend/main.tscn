@@ -16,6 +16,7 @@
 [ext_resource type="FontVariation" uid="uid://bf13ivlhnlvix" path="res://audiowide.tres" id="8_2cqfq"]
 [ext_resource type="Script" uid="uid://ddyw6hltilyq3" path="res://near_miss_fx.gd" id="11_dg77c"]
 [ext_resource type="Script" uid="uid://dfyqagpui1vqj" path="res://lives_display.gd" id="16_2cqfq"]
+[ext_resource type="AudioStream" uid="uid://b3k5yfy7hdv33" path="res://demo.wav" id="17_yaehf"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_efxa6"]
 shader = ExtResource("3_4c57u")
@@ -265,6 +266,7 @@ offset_bottom = 96.0
 text = "Processing "
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1488394178]
+stream = ExtResource("17_yaehf")
 
 [connection signal="timeout" from="Arena/Timer" to="Arena" method="_on_timer_timeout"]
 [connection signal="area_entered" from="Player/NearMissArea" to="Player" method="_on_near_miss_area_entered"]

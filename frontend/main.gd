@@ -87,11 +87,65 @@ func update_colours():
 func start(path, difficulty):
 	if path == "system":
 		start_live(difficulty)
+	elif path == "demo":
+		start_demo(difficulty)
 	else:
 		start_file(path, difficulty)
 
+func start_demo(difficulty: String) -> void:
+	mode = "file"
+
+	popup_label.text = "Loading `demo.wav`. \nPlease Wait..."
+	popup.popup_centered()
+	
+	await get_tree().create_timer(0.1).timeout
+
+	var analysis_path 
+	match difficulty:
+		"chill":
+			analysis_path = ProjectSettings.globalize_path("res://demo_chill.jsonl")
+		"normal":
+			analysis_path = ProjectSettings.globalize_path("res://demo_normal.jsonl")
+		"hard":
+			analysis_path = ProjectSettings.globalize_path("res://demo_hard.jsonl")
+		
+	var records = []
+	var file = FileAccess.open(analysis_path, FileAccess.READ)
+	while not file.eof_reached():
+		var line = file.get_line()
+		if line.strip_edges() == "":
+			continue
+		var parsed = JSON.parse_string(line)
+		if typeof(parsed) == TYPE_DICTIONARY:
+			records.append(parsed)
+	file.close()
+	
+	for r in records:
+		match r["type"]:
+			"meta": meta = r
+			"energy": energies.append(r)
+			"event": events.append(r)
+			"spectrum": spectrum.append(r)
+			"beat": beats.append(r["t"])
+
+	events.sort_custom(func(a, b): return a["t"] < b["t"])
+	energies.sort_custom(func(a, b): return a["t"] < b["t"])
+	spectrum.sort_custom(func(a, b): return a["t"] < b["t"])
+	beats.sort()
+
+	lives.init($Player.lives)
+	popup.hide()
+	arena.show()
+	menu.hide()
+	$AudioStreamPlayer.play()
+
+
 func start_live(difficulty: String) -> void:
-	var analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
+	var analyser_path
+	if OS.has_feature("standalone"):
+		analyser_path = OS.get_executable_path().get_base_dir() + "/circle_siege_backend.exe"
+	else:
+		analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
 	
 	popup_label.text = "Connecting to Websocket.\nPlease Wait..."
 	popup.popup_centered()
@@ -122,7 +176,11 @@ func _exit_tree():
 func start_file(path: String, difficulty: String) -> void:
 	mode = "file"
 	var wav_path = path
-	var analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
+	var analyser_path
+	if OS.has_feature("standalone"):
+		analyser_path = OS.get_executable_path().get_base_dir() + "/circle_siege_backend.exe"
+	else:
+		analyser_path = "C:/Users/Ma Family/Documents/David/Godot/Circle-Seige/backend/target/release/circle_siege_backend.exe"
 	var analysis_path = ProjectSettings.globalize_path("user://analysis.jsonl")
 	
 	popup_label.text = "Processing `" + wav_path.get_file() + "`. \nPlease Wait..."
