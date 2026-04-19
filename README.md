@@ -7,10 +7,11 @@
 
 A rhythm-based dodger game, based on your choice of music via live system audio input!
 
-![hero]()
+![hero](https://cdn.hackclub.com/019da581-5aa3-78f1-a481-be870bc63e2f/screenshot_2026-04-19_212123.png)
 
-| ![img1]() | ![img2]() |    ![img3]()     |
-|:----------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------:|:-----------------:|
+| ![img1](https://cdn.hackclub.com/019da581-6ca9-7cc6-aadd-48670f8cc483/screenshot_2026-04-19_212107.png) | ![img2](https://cdn.hackclub.com/019da581-5f18-7b77-ba2a-c4d300cb44fd/screenshot_2026-04-19_212144.png) | ![img3](https://cdn.hackclub.com/019da581-63e6-7cbb-b14f-fecb81f42eba/screenshot_2026-04-19_212304.png) |
+|:-------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------:|
+|                                              **Main Menu**                                              |                                       **Alternate Colour Theme**                                        |                                         **High-Contrast Mode**                                          |
 
 ### Download it [here](https://github.com/MadAvidCoder/Circle-Siege/releases/latest)!
 
